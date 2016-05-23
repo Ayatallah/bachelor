@@ -6,6 +6,16 @@ import os
 ##we want to read files once, read the whole file and throw away columns we dont need from a numpy array
 #use global variables to be able change whatever u want, for example columns number to add or remove
 
+#Globals
+problems = 0
+status = 1
+userTime = 2
+failure = 3
+preprocessingTime = 4
+heuristic = 59
+type = 60
+equational = 61
+
 def getData(name):
     array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(0,1,2,3,4,59,60,61), dtype=None)
     return array
@@ -68,7 +78,8 @@ def performanceVectors(heuristicsDir):
     for file in allFiles:
         if file.endswith(".csv"):
             vectors[counter][0] = os.path.basename(file)[16:-4]
-            vectors[counter][1:] = getNumericalStatus(getStatus(file), getUserTime(file))[:]
+            data = getData(file)
+            vectors[counter][1:] = getNumericalStatus(data[:, status], data[:, userTime])[:]
             counter += 1
     return vectors
 
