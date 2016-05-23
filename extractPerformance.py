@@ -16,11 +16,12 @@ heuristic = 59
 type = 60
 equational = 61
 
+## Get Data now prints all data with zero equivalent to anything missing
 def getData(name):
-    array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(0,1,2,3,4,59,60,61), dtype=None)
+    array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13744,  dtype=None, missing_values="-",filling_values="0")
     return array
 
-
+print getData("protokoll_G----_0001_FIFO.csv")
 def getProblems(name):
     array = np.empty(shape=10, dtype="S10")
     array[0:] = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(0), dtype=None)
@@ -60,11 +61,11 @@ def getEquational(name):
 ##give cell with no data, a zero for example,
 ##first try to cluster, upon success or no success, get sth simple work first then upgrade
 
-def getNumericalStatus(status, time):
-    result = [999999.9]*(len(status))
-    for i in [i for i,x in enumerate(status) if x == "T"]:
-        result[i] = 100.0 * float(time[i])
-    return result
+#def getNumericalStatus(status, time):
+#    result = [999999.9]*(len(status))
+#    for i in [i for i,x in enumerate(status) if x == "T"]:
+#        result[i] = 100.0 * float(time[i])
+#    return result
 
 
 def performanceVectors(heuristicsDir):
@@ -79,7 +80,8 @@ def performanceVectors(heuristicsDir):
         if file.endswith(".csv"):
             vectors[counter][0] = os.path.basename(file)[16:-4]
             data = getData(file)
-            vectors[counter][1:] = getNumericalStatus(data[:, status], data[:, userTime])[:]
+            #vectors[counter][1:] = getNumericalStatus(data[:, status], data[:, userTime])[:]
+            vectors[counter][1:] = data[:, status]
             counter += 1
     return vectors
 
