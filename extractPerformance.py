@@ -23,6 +23,7 @@ equational = 61
 
 def getData(name):
     array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(0,1,2,3,4,59,60,61), dtype=None)
+    #array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(0,1,2,3,4,59,60,61), dtype=None,missing_values="-",filling_values="0")
     return array
 
 #print getData("protokoll_G----_0001_FIFO.csv")
@@ -93,6 +94,7 @@ def performanceVectors(heuristicsDir):
     processData = np.empty((problemsCount,filesCount),dtype="S10")
     counter = 1
     counter2 = 0
+    ##process data is 2D array for 2 heuristics, with 10 rows for 10 samples
     for file in allFiles:
         if file.endswith(".csv"):
             vectors[counter][0] = os.path.basename(file)[16:-4]
@@ -106,8 +108,8 @@ def performanceVectors(heuristicsDir):
             counter2 += 1
     return processData
 
-def clusterx(data):
-    k = 4
+def cluster_data(data):
+    k = 2
     kmeans = cluster.KMeans(n_clusters=k)
     kmeans.fit(data)
     labels = kmeans.labels_
@@ -117,7 +119,7 @@ def clusterx(data):
     for i in range(k):
         # select only data observations with cluster label == i
         ds = data[np.where(labels == i)]
-        print ds[:, 0]
+        #print ds[:, 0]
         # plot the data observations
         plt.plot(ds[:, 0], ds[:, 1], 'o')
         # plot the centroids
@@ -142,25 +144,25 @@ def main(argv):
             if (os.path.isdir(inputfile)):
                 data = performanceVectors(inputfile)
                 print data
-                trial = np.zeros((10,2), dtype=np.int)
-                trial[0][0] =1
-                trial[0][1] = 1
+                #trial = np.zeros((10,2), dtype=np.int)
+                #trial[0][0] =1
+                #trial[0][1] = 1
 
-                trial[2][0] =2
-                trial[2][1] = 3
-                trial[4][0] =3
-                trial[4][1] = 2
+                #trial[2][0] =2
+                #trial[2][1] = 3
+                #trial[4][0] =3
+                #trial[4][1] = 2
 
-                trial[5][0] =1
-                trial[5][1] = 1
-                trial[6][0] =1
-                trial[6][1] = 0
-                trial[7][0] =0
-                trial[7][1] = 1
-                trial[8][0] =1
-                trial[8][1] = 1
-                print trial
-                clusterx(trial)
+                #trial[5][0] =1
+                #trial[5][1] = 1
+                #trial[6][0] =1
+                #trial[6][1] = 0
+                #trial[7][0] =0
+                #trial[7][1] = 1
+                #trial[8][0] =1
+                #rial[8][1] = 1
+                #print trial
+                cluster_data(data)
                 #print performanceVectors(inputfile)
             else:
                 print "Please enter a valid Directory"
@@ -168,3 +170,10 @@ def main(argv):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
+
+
+#more heuristics result files
+#exclude solved by all
+#exclude solved by none
+#number of clusters as input in method
+#work with missing and filling values
