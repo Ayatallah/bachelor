@@ -2,6 +2,9 @@ import numpy as np
 import sys
 import getopt
 import os
+import sklearn
+from sklearn import cluster
+import matplotlib.pyplot as plt
 
 ##we want to read files once, read the whole file and throw away columns we dont need from a numpy array
 #use global variables to be able change whatever u want, for example columns number to add or remove
@@ -103,6 +106,26 @@ def performanceVectors(heuristicsDir):
             counter2 += 1
     return processData
 
+def clusterx(data):
+    k = 4
+    kmeans = cluster.KMeans(n_clusters=k)
+    kmeans.fit(data)
+    labels = kmeans.labels_
+    print labels
+    centroids = kmeans.cluster_centers_
+    print centroids
+    for i in range(k):
+        # select only data observations with cluster label == i
+        ds = data[np.where(labels == i)]
+        print ds[:, 0]
+        # plot the data observations
+        plt.plot(ds[:, 0], ds[:, 1], 'o')
+        # plot the centroids
+        lines = plt.plot(centroids[i, 0], centroids[i, 1], 'kx')
+        # make the centroid x's bigger
+        plt.setp(lines, ms=15.0)
+        plt.setp(lines, mew=2.0)
+    plt.show()
 
 def main(argv):
     try:
@@ -117,7 +140,28 @@ def main(argv):
         elif opt == '-i':
             inputfile = arg
             if (os.path.isdir(inputfile)):
-                print performanceVectors(inputfile)
+                data = performanceVectors(inputfile)
+                print data
+                trial = np.zeros((10,2), dtype=np.int)
+                trial[0][0] =1
+                trial[0][1] = 1
+
+                trial[2][0] =2
+                trial[2][1] = 3
+                trial[4][0] =3
+                trial[4][1] = 2
+
+                trial[5][0] =1
+                trial[5][1] = 1
+                trial[6][0] =1
+                trial[6][1] = 0
+                trial[7][0] =0
+                trial[7][1] = 1
+                trial[8][0] =1
+                trial[8][1] = 1
+                print trial
+                clusterx(trial)
+                #print performanceVectors(inputfile)
             else:
                 print "Please enter a valid Directory"
 
