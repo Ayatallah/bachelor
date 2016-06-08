@@ -17,11 +17,14 @@ type = 60
 equational = 61
 
 ## Get Data now prints all data with zero equivalent to anything missing
+
 def getData(name):
-    array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13744,  dtype=None, missing_values="-",filling_values="0")
+    array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(0,1,2,3,4,59,60,61), dtype=None)
     return array
 
-print getData("protokoll_G----_0001_FIFO.csv")
+#print getData("protokoll_G----_0001_FIFO.csv")
+
+
 def getProblems(name):
     array = np.empty(shape=10, dtype="S10")
     array[0:] = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(0), dtype=None)
@@ -67,23 +70,38 @@ def getEquational(name):
 #        result[i] = 100.0 * float(time[i])
 #    return result
 
+##Solved 1 and Not Solved 0
+
+def getNumericalStatus(status):
+    #result = [0]*(len(status))
+    result = np.zeros(len(status), dtype=np.int)
+    for i in [i for i,x in enumerate(status) if x == "T"]:
+        result[i] = 1
+    return result
 
 def performanceVectors(heuristicsDir):
     file1 = os.listdir(heuristicsDir)[1]
     allFiles = os.listdir(heuristicsDir)
     filesCount = len([i  for i,x in enumerate(allFiles) if x.endswith(".csv")])
+    problemsCount = 10#for testing few problems
     vectors = np.empty((filesCount+1,11),dtype="S10")
     vectors[0][0] = "Problem/Heuristic"
     vectors[0][1:] = getProblems(file1)[:]
+    processData = np.empty((problemsCount,filesCount),dtype="S10")
     counter = 1
+    counter2 = 0
     for file in allFiles:
         if file.endswith(".csv"):
             vectors[counter][0] = os.path.basename(file)[16:-4]
             data = getData(file)
             #vectors[counter][1:] = getNumericalStatus(data[:, status], data[:, userTime])[:]
             vectors[counter][1:] = data[:, status]
+            #print (processData[:,counter2]).shape
+            #print (data[0,counter2])
+            processData[:, counter2] = getNumericalStatus(data[:, status])
             counter += 1
-    return vectors
+            counter2 += 1
+    return processData
 
 
 def main(argv):
