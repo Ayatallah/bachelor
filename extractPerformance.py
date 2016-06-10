@@ -31,7 +31,7 @@ equational = "Equational"
 ## Get Data now prints all data with zero equivalent to anything missing
 
 def getData(name):
-    array = np.genfromtxt(name, delimiter=",", skip_header=62,skip_footer=13764,  usecols=(0,1,2,3,4,59,60,61),
+    array = np.genfromtxt(name, delimiter=" ", skip_header=61,skip_footer=13764,  usecols=(0,1,2,3,4,59,60,61),
             names=[problems, status,userTime,failure,preprocessingTime,heuristic,type,equational],
             dtype=[('mystring', 'S25'), ('mystring1', 'S25'),('myfloat', 'f8'),('mystring2', 'S25'),('mystring3', 'S25'),('mystring4', 'S25'),
                    ('mystring5', 'S25'),('mystring6', 'S5')], missing_values=("-","-","-","-","-","-","-","-"),
@@ -43,7 +43,7 @@ def getData(name):
 
 def getProblems(name):
     array = np.empty(shape=10, dtype="S10")
-    array[0:] = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764,usecols=(0), dtype=None)
+    array[0:] = np.genfromtxt(name, delimiter=",", skip_header=61, skip_footer=13764,usecols=(0), dtype=None)
     return array
 
 
@@ -115,7 +115,7 @@ def performanceVectors(heuristicsDir):
     return processData
 
 def cluster_data(data):
-    k = 3
+    k = 5
     kmeans = cluster.KMeans(n_clusters=k)
     t0 = time();
     kmeans.fit(data)
