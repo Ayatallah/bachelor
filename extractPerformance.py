@@ -2,28 +2,40 @@ import numpy as np
 import sys
 import getopt
 import os
-import sklearn
+from time import time
 from sklearn import cluster
 import matplotlib.pyplot as plt
 
-##we want to read files once, read the whole file and throw away columns we dont need from a numpy array
-#use global variables to be able change whatever u want, for example columns number to add or remove
+#specify columns names and deal with them (Y)
 
 #Globals
-problems = 0
-status = 1
-userTime = 2
-failure = 3
-preprocessingTime = 4
-heuristic = 59
-type = 60
-equational = 61
+problemsCol = 0
+statusCol = 1
+userTimeCol = 2
+failureCol = 3
+preprocessingTimeCol = 4
+heuristicCol = 59
+typeCol = 60
+equationalCol = 61
+
+
+problems = "Problems"
+status = "Status"
+userTime = "UserTime"
+failure = "Failure"
+preprocessingTime = "PreprocessingTime"
+heuristic = "Heuristic"
+type = "Type"
+equational = "Equational"
 
 ## Get Data now prints all data with zero equivalent to anything missing
 
 def getData(name):
-    array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(0,1,2,3,4,59,60,61), dtype=None)
-    #array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(0,1,2,3,4,59,60,61), dtype=None,missing_values="-",filling_values="0")
+    array = np.genfromtxt(name, delimiter=",", skip_header=62,skip_footer=13764,  usecols=(0,1,2,3,4,59,60,61),
+            names=[problems, status,userTime,failure,preprocessingTime,heuristic,type,equational],
+            dtype=[('mystring', 'S25'), ('mystring1', 'S25'),('myfloat', 'f8'),('mystring2', 'S25'),('mystring3', 'S25'),('mystring4', 'S25'),
+                   ('mystring5', 'S25'),('mystring6', 'S5')], missing_values=("-","-","-","-","-","-","-","-"),
+                          filling_values=("0","0",0.0,"0","0","0","0","0"))
     return array
 
 #print getData("protokoll_G----_0001_FIFO.csv")
@@ -31,7 +43,7 @@ def getData(name):
 
 def getProblems(name):
     array = np.empty(shape=10, dtype="S10")
-    array[0:] = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(0), dtype=None)
+    array[0:] = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764,usecols=(0), dtype=None)
     return array
 
 
@@ -64,9 +76,7 @@ def getEquational(name):
     array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(61), dtype=None)
     return array
 
-## we need status and time, no need for combination between them.
-##give cell with no data, a zero for example,
-##first try to cluster, upon success or no success, get sth simple work first then upgrade
+
 
 #def getNumericalStatus(status, time):
 #    result = [999999.9]*(len(status))
@@ -77,7 +87,6 @@ def getEquational(name):
 ##Solved 1 and Not Solved 0
 
 def getNumericalStatus(status):
-    #result = [0]*(len(status))
     result = np.zeros(len(status), dtype=np.int)
     for i in [i for i,x in enumerate(status) if x == "T"]:
         result[i] = 1
@@ -85,33 +94,32 @@ def getNumericalStatus(status):
 
 def performanceVectors(heuristicsDir):
     file1 = os.listdir(heuristicsDir)[1]
+    print file1
     allFiles = os.listdir(heuristicsDir)
     filesCount = len([i  for i,x in enumerate(allFiles) if x.endswith(".csv")])
-    problemsCount = 10#for testing few problems
+    print filesCount
+    problemsCount = 10 #for testing few problems
     vectors = np.empty((filesCount+1,11),dtype="S10")
-    vectors[0][0] = "Problem/Heuristic"
-    vectors[0][1:] = getProblems(file1)[:]
     processData = np.empty((problemsCount,filesCount),dtype="S10")
     counter = 1
     counter2 = 0
-    ##process data is 2D array for 2 heuristics, with 10 rows for 10 samples
     for file in allFiles:
         if file.endswith(".csv"):
             vectors[counter][0] = os.path.basename(file)[16:-4]
-            data = getData(file)
-            #vectors[counter][1:] = getNumericalStatus(data[:, status], data[:, userTime])[:]
-            vectors[counter][1:] = data[:, status]
-            #print (processData[:,counter2]).shape
-            #print (data[0,counter2])
-            processData[:, counter2] = getNumericalStatus(data[:, status])
+            filetoOpen = heuristicsDir+"/"+file
+            data = getData(filetoOpen)
+            vectors[counter][1:] = data[ status]
+            processData[:, counter2] = getNumericalStatus(data[status])
             counter += 1
             counter2 += 1
     return processData
 
 def cluster_data(data):
-    k = 2
+    k = 3
     kmeans = cluster.KMeans(n_clusters=k)
+    t0 = time();
     kmeans.fit(data)
+    print "time is:",(time()-t0)
     labels = kmeans.labels_
     print labels
     centroids = kmeans.cluster_centers_
@@ -121,12 +129,14 @@ def cluster_data(data):
         ds = data[np.where(labels == i)]
         #print ds[:, 0]
         # plot the data observations
-        plt.plot(ds[:, 0], ds[:, 1], 'o')
+        dots = plt.plot(ds[:, 0], ds[:, 1], 'o')
         # plot the centroids
         lines = plt.plot(centroids[i, 0], centroids[i, 1], 'kx')
         # make the centroid x's bigger
         plt.setp(lines, ms=15.0)
         plt.setp(lines, mew=2.0)
+        plt.setp(dots, ms=7.0)
+        plt.setp(dots, mew=2.0)
     plt.show()
 
 def main(argv):
@@ -144,26 +154,7 @@ def main(argv):
             if (os.path.isdir(inputfile)):
                 data = performanceVectors(inputfile)
                 print data
-                #trial = np.zeros((10,2), dtype=np.int)
-                #trial[0][0] =1
-                #trial[0][1] = 1
-
-                #trial[2][0] =2
-                #trial[2][1] = 3
-                #trial[4][0] =3
-                #trial[4][1] = 2
-
-                #trial[5][0] =1
-                #trial[5][1] = 1
-                #trial[6][0] =1
-                #trial[6][1] = 0
-                #trial[7][0] =0
-                #trial[7][1] = 1
-                #trial[8][0] =1
-                #rial[8][1] = 1
-                #print trial
                 cluster_data(data)
-                #print performanceVectors(inputfile)
             else:
                 print "Please enter a valid Directory"
 
@@ -171,9 +162,3 @@ def main(argv):
 if __name__ == "__main__":
     main(sys.argv[1:])
 
-
-#more heuristics result files
-#exclude solved by all
-#exclude solved by none
-#number of clusters as input in method
-#work with missing and filling values
