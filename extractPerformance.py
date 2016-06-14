@@ -114,8 +114,9 @@ def performanceVectors(heuristicsDir):
             counter2 += 1
     return processData
 
-def cluster_data(data):
-    k = 5
+def cluster_data(data,clustersno):
+    k = int(clustersno)
+    print k
     kmeans = cluster.KMeans(n_clusters=k)
     t0 = time();
     kmeans.fit(data)
@@ -127,7 +128,6 @@ def cluster_data(data):
     for i in range(k):
         # select only data observations with cluster label == i
         ds = data[np.where(labels == i)]
-        #print ds[:, 0]
         # plot the data observations
         dots = plt.plot(ds[:, 0], ds[:, 1], 'o')
         # plot the centroids
@@ -140,8 +140,10 @@ def cluster_data(data):
     plt.show()
 
 def main(argv):
+    inputfile=""
+    clustersno = 0
     try:
-        opts, args = getopt.getopt(argv, "hi:", ["ifile="])
+        opts, args = getopt.getopt(argv, "hi:k:", ["ifile="])
     except getopt.GetoptError:
         print 'extractPerformance.py -i <inputfile>'
         sys.exit(2)
@@ -151,10 +153,12 @@ def main(argv):
             sys.exit()
         elif opt == '-i':
             inputfile = arg
+        elif opt == '-k':
+            clustersno = arg
             if (os.path.isdir(inputfile)):
                 data = performanceVectors(inputfile)
                 print data
-                cluster_data(data)
+                cluster_data(data,clustersno)
             else:
                 print "Please enter a valid Directory"
 
