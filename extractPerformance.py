@@ -140,33 +140,18 @@ def cluster_data(data,clustersno):
     plt.show()
 
 def excludeData(data):
-    b,n = data.shape
-    #print m,n
+    j,k = data.shape
     solvedbyAll = []
     solvedbyNone = []
-    #print np.count_nonzero([[0, 1, 7, 0, 0]])
-    #var1 = []
-    #var1 = data[0]
-    #print var1
-    #for i in range(5):
-        #print np.count_nonzero([data[i]])
-        #print data[i]
-    #print var
-    #for i in range(m):
-        #print np.count_nonzero(data[i])
-    for i in range(b):
+    for i in range(j):
         l = (np.where(data[i] == '1')[0]).size
         m = (np.where(data[i] == '0')[0]).size
         if(l == 40 ):
             solvedbyAll = solvedbyAll  + [i]
         if(m == 40):
             solvedbyNone = solvedbyNone + [i]
-    #print data.shape
     data_solvedbyAll = (np.delete(data,solvedbyAll,0))
-    #print data_solvedbyAll.shape
     data_solvedbyAllandNone = (np.delete(data_solvedbyAll,solvedbyNone,0))
-    #print data_solvedbyAllandNone.shape
-    #print var
     return data_solvedbyAllandNone.shape
 
 
