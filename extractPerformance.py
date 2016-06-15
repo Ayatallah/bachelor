@@ -31,7 +31,7 @@ equational = "Equational"
 ## Get Data now prints all data with zero equivalent to anything missing
 
 def getData(name):
-    array = np.genfromtxt(name, delimiter=" ", skip_header=61,skip_footer=13764,  usecols=(0,1,2,3,4,59,60,61),
+    array = np.genfromtxt(name, delimiter=" ", skip_header=61,skip_footer=6164,  usecols=(0,1,2,3,4,59,60,61),
             names=[problems, status,userTime,failure,preprocessingTime,heuristic,type,equational],
             dtype=[('mystring', 'S25'), ('mystring1', 'S25'),('myfloat', 'f8'),('mystring2', 'S25'),('mystring3', 'S25'),('mystring4', 'S25'),
                    ('mystring5', 'S25'),('mystring6', 'S5')], missing_values=("-","-","-","-","-","-","-","-"),
@@ -42,8 +42,8 @@ def getData(name):
 
 
 def getProblems(name):
-    array = np.empty(shape=10, dtype="S10")
-    array[0:] = np.genfromtxt(name, delimiter=",", skip_header=61, skip_footer=13764,usecols=(0), dtype=None)
+    array = np.empty(shape=7610, dtype="S10")
+    array[0:] = np.genfromtxt(name, delimiter=",", skip_header=61, skip_footer=13164,usecols=(0), dtype=None)
     return array
 
 
@@ -89,17 +89,17 @@ def getEquational(name):
 def getNumericalStatus(status):
     result = np.zeros(len(status), dtype=np.int)
     for i in [i for i,x in enumerate(status) if x == "T"]:
-        result[i] = 1
+        result[i] = int(1)
     return result
 
 def performanceVectors(heuristicsDir):
     file1 = os.listdir(heuristicsDir)[1]
-    print file1
+    #print file1
     allFiles = os.listdir(heuristicsDir)
     filesCount = len([i  for i,x in enumerate(allFiles) if x.endswith(".csv")])
-    print filesCount
-    problemsCount = 10 #for testing few problems
-    vectors = np.empty((filesCount+1,11),dtype="S10")
+    #print filesCount
+    problemsCount = 7610 #for testing few problems
+    vectors = np.empty((filesCount+1,7611),dtype="S10")
     processData = np.empty((problemsCount,filesCount),dtype="S10")
     counter = 1
     counter2 = 0
@@ -116,15 +116,15 @@ def performanceVectors(heuristicsDir):
 
 def cluster_data(data,clustersno):
     k = int(clustersno)
-    print k
+    #print k
     kmeans = cluster.KMeans(n_clusters=k)
     t0 = time();
     kmeans.fit(data)
     print "time is:",(time()-t0)
     labels = kmeans.labels_
-    print labels
+    #print labels
     centroids = kmeans.cluster_centers_
-    print centroids
+    #print centroids
     for i in range(k):
         # select only data observations with cluster label == i
         ds = data[np.where(labels == i)]
@@ -138,6 +138,37 @@ def cluster_data(data,clustersno):
         plt.setp(dots, ms=7.0)
         plt.setp(dots, mew=2.0)
     plt.show()
+
+def excludeData(data):
+    b,n = data.shape
+    #print m,n
+    solvedbyAll = []
+    solvedbyNone = []
+    #print np.count_nonzero([[0, 1, 7, 0, 0]])
+    #var1 = []
+    #var1 = data[0]
+    #print var1
+    #for i in range(5):
+        #print np.count_nonzero([data[i]])
+        #print data[i]
+    #print var
+    #for i in range(m):
+        #print np.count_nonzero(data[i])
+    for i in range(b):
+        l = (np.where(data[i] == '1')[0]).size
+        m = (np.where(data[i] == '0')[0]).size
+        if(l == 40 ):
+            solvedbyAll = solvedbyAll  + [i]
+        if(m == 40):
+            solvedbyNone = solvedbyNone + [i]
+    #print data.shape
+    data_solvedbyAll = (np.delete(data,solvedbyAll,0))
+    #print data_solvedbyAll.shape
+    data_solvedbyAllandNone = (np.delete(data_solvedbyAll,solvedbyNone,0))
+    #print data_solvedbyAllandNone.shape
+    #print var
+    return data_solvedbyAllandNone.shape
+
 
 def main(argv):
     inputfile=""
@@ -157,7 +188,8 @@ def main(argv):
             clustersno = arg
             if (os.path.isdir(inputfile)):
                 data = performanceVectors(inputfile)
-                print data
+                excludeData(data)
+                #print data
                 cluster_data(data,clustersno)
             else:
                 print "Please enter a valid Directory"
