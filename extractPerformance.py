@@ -78,19 +78,19 @@ def getEquational(name):
 
 
 
-#def getNumericalStatus(status, time):
-#    result = [999999.9]*(len(status))
-#    for i in [i for i,x in enumerate(status) if x == "T"]:
-#        result[i] = 100.0 * float(time[i])
-#    return result
+def getNumericalStatus(status, time):
+    result = [0.0]*(len(status))
+    for i in [i for i,x in enumerate(status) if x == "T"]:
+        result[i] = 1.0 * float(time[i])
+    return result
 
 ##Solved 1 and Not Solved 0
 
-def getNumericalStatus(status):
-    result = np.zeros(len(status), dtype=np.int)
-    for i in [i for i,x in enumerate(status) if x == "T"]:
-        result[i] = int(1)
-    return result
+#def getNumericalStatus(status,time):
+#    result = np.zeros(len(status), dtype=np.float)
+#    for i in [i for i,x in enumerate(status) if x == "T"]:
+#        result[i] = float(time[i])
+#    return result
 
 def performanceVectors(heuristicsDir):
     file1 = os.listdir(heuristicsDir)[1]
@@ -109,7 +109,7 @@ def performanceVectors(heuristicsDir):
             filetoOpen = heuristicsDir+"/"+file
             data = getData(filetoOpen)
             vectors[counter][1:] = data[ status]
-            processData[:, counter2] = getNumericalStatus(data[status])
+            processData[:, counter2] = getNumericalStatus(data[status],data[userTime])
             counter += 1
             counter2 += 1
     return processData
@@ -140,12 +140,13 @@ def cluster_data(data,clustersno):
     plt.show()
 
 def excludeData(data):
+    print data
     j,k = data.shape
     solvedbyAll = []
     solvedbyNone = []
     for i in range(j):
-        l = (np.where(data[i] == '1')[0]).size
-        m = (np.where(data[i] == '0')[0]).size
+        l = (np.where(data[i] != '0.0')[0]).size
+        m = (np.where(data[i] == '0.0')[0]).size
         if(l == 40 ):
             solvedbyAll = solvedbyAll  + [i]
         if(m == 40):
