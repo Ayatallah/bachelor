@@ -6,9 +6,9 @@ from time import time
 from sklearn import cluster
 import matplotlib.pyplot as plt
 
-#specify columns names and deal with them (Y)
 
 #Globals
+
 problemsCol = 0
 statusCol = 1
 userTimeCol = 2
@@ -31,6 +31,7 @@ equational = "Equational"
 
 problemsNames = np.empty(7610, dtype="S15")
 problemsNameSet = False
+
 ## Get Data now prints all data with zero equivalent to anything missing
 
 def getData(name):
@@ -45,7 +46,6 @@ def getData(name):
         problemsNameSet = True
     return array
 
-#print getData("protokoll_G----_0001_FIFO.csv")
 
 
 def getProblems(name):
@@ -91,20 +91,9 @@ def getNumericalStatus(status, time):
         result[i] = 1.0 * float(time[i])
     return result
 
-##Solved 1 and Not Solved 0
-
-#def getNumericalStatus(status,time):
-#    result = np.zeros(len(status), dtype=np.float)
-#    for i in [i for i,x in enumerate(status) if x == "T"]:
-#        result[i] = float(time[i])
-#    return result
-
 def performanceVectors(heuristicsDir):
-    #file1 = os.listdir(heuristicsDir)[1]
-    #print file1
     allFiles = os.listdir(heuristicsDir)
     filesCount = len([i  for i,x in enumerate(allFiles) if x.endswith(".csv")])
-    #print filesCount
     problemsCount = 7610 #for testing few problems
     vectors = np.empty((filesCount+1,7611),dtype="S10")
     processData = np.empty((problemsCount,filesCount),dtype="S10")
@@ -119,12 +108,10 @@ def performanceVectors(heuristicsDir):
             processData[:, counter2] = getNumericalStatus(data[status],data[userTime])
             counter += 1
             counter2 += 1
-    #print excludeData(processData).shape
     return excludeData(processData)
 
 def cluster_data(data,clustersno):
     k = int(clustersno)
-    #print k
     kmeans = cluster.KMeans(n_clusters=k)
     t0 = time();
     kmeans.fit(data)
@@ -160,19 +147,14 @@ def excludeData(data):
             solvedbyAll = solvedbyAll  + [i]
         if(m == 40):
             solvedbyNone = solvedbyNone + [i]
-
-    #data_solvedbyAll = (np.delete(data, solvedbyAll, 0))
     #Removing the solved by All
     data = np.delete(data,solvedbyAll,0)
-
-    #data_solvedbyAllandNone = (np.delete(data_solvedbyAll, solvedbyNone, 0))
     #Removing the solved by None
     data = np.delete(data, solvedbyNone, 0)
-
+    #Removing Problems Names
     global problemsNames
     problemsNames = np.delete(problemsNames,solvedbyAll)
     problemsNames = np.delete(problemsNames, solvedbyNone)
-    #print problemsNames.shape
     return data
 
 
