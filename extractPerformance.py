@@ -110,30 +110,6 @@ def performanceVectors(heuristicsDir):
             counter2 += 1
     return excludeData(processData)
 
-def cluster_data(data,clustersno):
-    k = int(clustersno)
-    kmeans = cluster.KMeans(n_clusters=k)
-    t0 = time();
-    kmeans.fit(data)
-    print "time is:",(time()-t0)
-    labels = kmeans.labels_
-    print labels
-    centroids = kmeans.cluster_centers_
-    print centroids
-    for i in range(k):
-        # select only data observations with cluster label == i
-        ds = data[np.where(labels == i)]
-        # plot the data observations
-        dots = plt.plot(ds[:, 0], ds[:, 1], 'o')
-        # plot the centroids
-        lines = plt.plot(centroids[i, 0], centroids[i, 1], 'kx')
-        # make the centroid x's bigger
-        plt.setp(lines, ms=15.0)
-        plt.setp(lines, mew=2.0)
-        plt.setp(dots, ms=7.0)
-        plt.setp(dots, mew=2.0)
-    plt.show()
-
 def excludeData(data):
     print data
     j,k = data.shape
@@ -157,6 +133,33 @@ def excludeData(data):
     problemsNames = np.delete(problemsNames, solvedbyNone)
     return data
 
+def analyze_data(labels):
+    print "Hi"
+
+def cluster_data(data,clustersno):
+    k = int(clustersno)
+    kmeans = cluster.KMeans(n_clusters=k)
+    t0 = time();
+    kmeans.fit(data)
+    print "time is:",(time()-t0)
+    labels = kmeans.labels_
+    #print labels
+    centroids = kmeans.cluster_centers_
+    #print centroids
+    analyze_data(labels)
+    for i in range(k):
+        # select only data observations with cluster label == i
+        ds = data[np.where(labels == i)]
+        # plot the data observations
+        dots = plt.plot(ds[:, 0], ds[:, 1], 'o')
+        # plot the centroids
+        lines = plt.plot(centroids[i, 0], centroids[i, 1], 'kx')
+        # make the centroid x's bigger
+        plt.setp(lines, ms=15.0)
+        plt.setp(lines, mew=2.0)
+        plt.setp(dots, ms=7.0)
+        plt.setp(dots, mew=2.0)
+    plt.show()
 
 def main(argv):
     inputfile=""
@@ -176,7 +179,6 @@ def main(argv):
             clustersno = arg
             if (os.path.isdir(inputfile)):
                 data = performanceVectors(inputfile)
-                #print data.shape
                 cluster_data(data,clustersno)
             else:
                 print "Please enter a valid Directory"
