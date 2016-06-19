@@ -28,6 +28,9 @@ heuristic = "Heuristic"
 type = "Type"
 equational = "Equational"
 
+
+problemsNames = np.empty(7610, dtype="S15")
+problemsNameSet = False
 ## Get Data now prints all data with zero equivalent to anything missing
 
 def getData(name):
@@ -36,6 +39,10 @@ def getData(name):
             dtype=[('mystring', 'S25'), ('mystring1', 'S25'),('myfloat', 'f8'),('mystring2', 'S25'),('mystring3', 'S25'),('mystring4', 'S25'),
                    ('mystring5', 'S25'),('mystring6', 'S5')], missing_values=("-","-","-","-","-","-","-","-"),
                           filling_values=("0","0",0.0,"0","0","0","0","0"))
+    global problemsNames,problemsNameSet
+    if(problemsNameSet is False) :
+        problemsNames = array[problems]
+        problemsNameSet = True
     return array
 
 #print getData("protokoll_G----_0001_FIFO.csv")
@@ -93,7 +100,7 @@ def getNumericalStatus(status, time):
 #    return result
 
 def performanceVectors(heuristicsDir):
-    file1 = os.listdir(heuristicsDir)[1]
+    #file1 = os.listdir(heuristicsDir)[1]
     #print file1
     allFiles = os.listdir(heuristicsDir)
     filesCount = len([i  for i,x in enumerate(allFiles) if x.endswith(".csv")])
@@ -108,11 +115,12 @@ def performanceVectors(heuristicsDir):
             vectors[counter][0] = os.path.basename(file)[16:-4]
             filetoOpen = heuristicsDir+"/"+file
             data = getData(filetoOpen)
-            vectors[counter][1:] = data[ status]
+            vectors[counter][1:] = data[status]
             processData[:, counter2] = getNumericalStatus(data[status],data[userTime])
             counter += 1
             counter2 += 1
-    return processData
+    #print excludeData(processData).shape
+    return excludeData(processData)
 
 def cluster_data(data,clustersno):
     k = int(clustersno)
@@ -122,9 +130,9 @@ def cluster_data(data,clustersno):
     kmeans.fit(data)
     print "time is:",(time()-t0)
     labels = kmeans.labels_
-    #print labels
+    print labels
     centroids = kmeans.cluster_centers_
-    #print centroids
+    print centroids
     for i in range(k):
         # select only data observations with cluster label == i
         ds = data[np.where(labels == i)]
@@ -144,6 +152,7 @@ def excludeData(data):
     j,k = data.shape
     solvedbyAll = []
     solvedbyNone = []
+
     for i in range(j):
         l = (np.where(data[i] != '0.0')[0]).size
         m = (np.where(data[i] == '0.0')[0]).size
@@ -151,9 +160,20 @@ def excludeData(data):
             solvedbyAll = solvedbyAll  + [i]
         if(m == 40):
             solvedbyNone = solvedbyNone + [i]
-    data_solvedbyAll = (np.delete(data,solvedbyAll,0))
-    data_solvedbyAllandNone = (np.delete(data_solvedbyAll,solvedbyNone,0))
-    return data_solvedbyAllandNone.shape
+
+    #data_solvedbyAll = (np.delete(data, solvedbyAll, 0))
+    #Removing the solved by All
+    data = np.delete(data,solvedbyAll,0)
+
+    #data_solvedbyAllandNone = (np.delete(data_solvedbyAll, solvedbyNone, 0))
+    #Removing the solved by None
+    data = np.delete(data, solvedbyNone, 0)
+
+    global problemsNames
+    problemsNames = np.delete(problemsNames,solvedbyAll)
+    problemsNames = np.delete(problemsNames, solvedbyNone)
+    #print problemsNames.shape
+    return data
 
 
 def main(argv):
@@ -174,8 +194,7 @@ def main(argv):
             clustersno = arg
             if (os.path.isdir(inputfile)):
                 data = performanceVectors(inputfile)
-                excludeData(data)
-                #print data
+                #print data.shape
                 cluster_data(data,clustersno)
             else:
                 print "Please enter a valid Directory"
