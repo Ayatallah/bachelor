@@ -119,17 +119,18 @@ def excludeData(data):
     j,k = data.shape
     solvedbyAll = []
     solvedbyNone = []
+    #print "J IS",j
     for i in range(j):
-        l = (np.where(data[i] != '0.0')[0]).size
-        m = (np.where(data[i] == '0.0')[0]).size
+        l = (np.where(data[i] != '99999.9')[0]).size
+        m = (np.where(data[i] == '99999.9')[0]).size
         if(l == 40 ):
             solvedbyAll = solvedbyAll  + [i]
         if(m == 40):
-            solvedbyNone = solvedbyNone + [i]
+            solvedbyAll = solvedbyAll + [i]
     #Removing the solved by All
     data = np.delete(data,solvedbyAll,0)
     #Removing the solved by None
-    data = np.delete(data, solvedbyNone, 0)
+    ##data = np.delete(data, solvedbyNone, 0)
     #Removing Problems Names
     global problemsNames
     problemsNames = np.delete(problemsNames,solvedbyAll,0)
