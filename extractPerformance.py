@@ -6,6 +6,7 @@ from time import time
 from sklearn import cluster
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist, pdist
+import pandas as pd
 import operator
 #number13774
 #Globals
@@ -37,16 +38,30 @@ clustersLengths = []
 ## Get Data now prints all data with zero equivalent to anything missing
 
 def getData(name):
-    array = np.genfromtxt(name, delimiter=" ", skip_header=61,  usecols=(0,1,2,3,4,59,60,61),
-            names=[problems, status,userTime,failure,preprocessingTime,heuristic,type,equational],
-            dtype=[('mystring', 'S25'), ('mystring1', 'S25'),('myfloat', 'f8'),('mystring2', 'S25'),('mystring3', 'S25'),('mystring4', 'S25'),
-                   ('mystring5', 'S25'),('mystring6', 'S5')], missing_values=("-","-","-","-","-","-","-","-"),
-                          filling_values=("0","0",0.0,"0","0","0","0","0"))
+    #print name
+    if(name=="/home/ayatallah/bachelor/heuristics/protokoll_G----_0036_10cw113fifo.csv"
+       or name =="/home/ayatallah/bachelor/heuristics/protokoll_G----_0022_10cw112fifo.csv"
+       or name == "/home/ayatallah/bachelor/heuristics/protokoll_G----_0038_2cw11fifo.csv"
+       or name =="/home/ayatallah/bachelor/heuristics/protokoll_G----_0039_10cw11fifopi.csv"
+       or name =="/home/ayatallah/bachelor/heuristics/protokoll_G----_0037_cw12.csv"
+       or name =="/home/ayatallah/bachelor/heuristics/protokoll_G----_0035_cw113.csv"
+       or name =="/home/ayatallah/bachelor/heuristics/protokoll_G----_0035_cw112.csv"):
+        df = pd.read_csv(name, header=None, delim_whitespace=True, usecols=[0, 1, 2, 3, 4, 59, 60, 61], skiprows=64,
+                     names=[problems, status, userTime, failure, preprocessingTime, heuristic, type, equational])
+    else:
+        df = pd.read_csv(name, header=None, delim_whitespace=True, usecols=[0, 1, 2, 3, 4, 59, 60, 61], skiprows=61,
+                         names=[problems, status, userTime, failure, preprocessingTime, heuristic, type, equational])
+    df[userTime] = df[userTime].convert_objects(convert_numeric=True)
+    df[userTime] = df[userTime].astype('float')
+    df[userTime].fillna(99999.9, inplace=True)
+
+    #print len(df)
+    #print df[problems][0]
     global problemsNames,problemsNameSet
     if(problemsNameSet is False) :
-        problemsNames[:,0] = array[problems]
+        problemsNames[:,0] = df[problems]
         problemsNameSet = True
-    return array
+    return df
 
 
 
@@ -89,7 +104,7 @@ def getEquational(name):
 
 def getNumericalStatus(status, time):
     result = [99999.9]*(len(status))
-    for i in [i for i,x in enumerate(status) if x == "T"]:
+    for i in [i for i,x in enumerate(time) if x != 99999.9]:
         result[i] = 1.0 * float(time[i])
     return result
 
@@ -117,24 +132,24 @@ def performanceVectors(heuristicsDir):
 
 def excludeData(data):
     j,k = data.shape
-    solvedbyAll = []
-    solvedbyNone = []
+    solvedbyAllandNone = []
+    #solvedbyNone = []
     #print "J IS",j
     for i in range(j):
         l = (np.where(data[i] != '99999.9')[0]).size
         m = (np.where(data[i] == '99999.9')[0]).size
         if(l == 40 ):
-            solvedbyAll = solvedbyAll  + [i]
+            solvedbyAllandNone = solvedbyAllandNone  + [i]
         if(m == 40):
-            solvedbyAll = solvedbyAll + [i]
+            solvedbyAllandNone = solvedbyAllandNone + [i]
     #Removing the solved by All
-    data = np.delete(data,solvedbyAll,0)
+    data = np.delete(data,solvedbyAllandNone,0)
     #Removing the solved by None
     ##data = np.delete(data, solvedbyNone, 0)
     #Removing Problems Names
     global problemsNames
-    problemsNames = np.delete(problemsNames,solvedbyAll,0)
-    problemsNames = np.delete(problemsNames, solvedbyNone,0)
+    problemsNames = np.delete(problemsNames,solvedbyAllandNone,0)
+    #problemsNames = np.delete(problemsNames, solvedbyNone,0)
     #print data.shape
     return data
 
@@ -176,7 +191,7 @@ def analyze_data(labels,data,k):
 
 
 def elbow_method(data):
-    k_range = range(1,100)
+    k_range = range(1,450)
     k_means = [cluster.KMeans(n_clusters=k).fit(data) for k in k_range]
     centroids = [X.cluster_centers_ for X in k_means]
     k_euclid = [cdist(data, cent, 'euclidean') for cent in centroids]
@@ -189,7 +204,7 @@ def elbow_method(data):
     ax = fig.add_subplot(111)
     ax.plot(k_range, bss / tss * 100, 'b*-')
     ax.set_ylim((0, 100))
-    ax.set_xlim((0, 100))
+    ax.set_xlim((0, 450))
     plt.grid(True)
     plt.xlabel('Number of Clusters')
     plt.ylabel('Percentage of Variance')
