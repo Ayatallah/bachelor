@@ -38,7 +38,24 @@ def getData(name):
     print len(df)
     return df
 
+global labelsNames
+labelsNames = np.array([[]])
+labelsNames=np.append(labelsNames, [[1,2,3]],axis = 1)
+labelsNames=np.append(labelsNames, [[4,5,6]],axis = 0)
+labelsNames=np.append(labelsNames, [[7,8,9]],axis = 0)
+print labelsNames[0]
 
+my_list = [[1,2,3],[4,5,6],[7,8,9]]
+col_totals = [ sum(x) for x in zip(*my_list) ]
+print col_totals
+
+elements = [[1,2,3],[4,5,6],[7,8,9]]
+for row in elements:
+    # Loop over columns.
+    for column in row:
+        array = column
+        print(column)
+    print("\n")
 #thedata = getData("protokoll_G----_0001_FIFO.csv")
 #f = open("mydata.csv", "w")
 
