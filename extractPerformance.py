@@ -7,6 +7,7 @@ from sklearn import cluster
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist, pdist
 import pandas as pd
+import subprocess
 import operator
 #number13774
 #Globals
@@ -20,6 +21,7 @@ heuristicCol = 59
 typeCol = 60
 equationalCol = 61
 
+filesCount = 0
 
 problems = "Problems"
 status = "Status"
@@ -31,73 +33,45 @@ type = "Type"
 equational = "Equational"
 
 heuristicNames = ["Problem"]
-problemsNames = np.empty((13774,41), dtype="S15")
+problemsNames = np.empty((13774,40), dtype="S15")
+problemsOnly = np.array([])
 problemsNameSet = False
 clustersLengths = []
 best_heuristics = []
+supervised_xAndFeatures = []
+supervised_y = []
 
 def getData(name):
-
-    if(name=="/home/ayatallah/bachelor/heuristics/protokoll_G----_0036_10cw113fifo.csv"
-       or name =="/home/ayatallah/bachelor/heuristics/protokoll_G----_0022_10cw112fifo.csv"
-       or name == "/home/ayatallah/bachelor/heuristics/protokoll_G----_0038_2cw11fifo.csv"
-       or name =="/home/ayatallah/bachelor/heuristics/protokoll_G----_0039_10cw11fifopi.csv"
-       or name =="/home/ayatallah/bachelor/heuristics/protokoll_G----_0037_cw12.csv"
-       or name =="/home/ayatallah/bachelor/heuristics/protokoll_G----_0035_cw113.csv"
-       or name =="/home/ayatallah/bachelor/heuristics/protokoll_G----_0035_cw112.csv"):
-        df = pd.read_csv(name, header=None, delim_whitespace=True, usecols=[0, 1, 2, 3, 4, 59, 60, 61], skiprows=64,
+    #if(name=="/home/ayatallah/bachelor/bachelor/heuristics/protokoll_G----_0036_10cw113fifo.csv"
+    #   or name =="/home/ayatallah/bachelor/bachelor/heuristics/protokoll_G----_0022_10cw112fifo.csv"
+    #   or name == "/home/ayatallah/bachelor/bachelor/heuristics/protokoll_G----_0038_2cw11fifo.csv"
+    #   or name =="/home/ayatallah/bachelor/bachelor/heuristics/protokoll_G----_0039_10cw11fifopi.csv"
+    #   or name =="/home/ayatallah/bachelor/bachelor/heuristics/protokoll_G----_0037_cw12.csv"
+    #   or name =="/home/ayatallah/bachelor/bachelor/heuristics/protokoll_G----_0035_cw113.csv"
+    #   or name =="/home/ayatallah/bachelor/bachelor/heuristics/protokoll_G----_0035_cw112.csv"):
+    #    df = pd.read_csv(name, header=None, delim_whitespace=True, usecols=[0, 1, 2, 3, 4, 59, 60, 61], skiprows=64,
+    #                 names=[problems, status, userTime, failure, preprocessingTime, heuristic, type, equational])
+    #else:
+    #    df = pd.read_csv(name, header=None, delim_whitespace=True, usecols=[0, 1, 2, 3, 4, 59, 60, 61], skiprows=61,
+    #                     names=[problems, status, userTime, failure, preprocessingTime, heuristic, type, equational])
+    comment = 0
+    for line in open(name):
+        li = line.strip()
+        if li.startswith("#"):
+            comment += 1
+    df = pd.read_csv(name, header=None, delim_whitespace=True, usecols=[0, 1, 2, 3, 4, 59, 60, 61], skiprows=comment,
                      names=[problems, status, userTime, failure, preprocessingTime, heuristic, type, equational])
-    else:
-        df = pd.read_csv(name, header=None, delim_whitespace=True, usecols=[0, 1, 2, 3, 4, 59, 60, 61], skiprows=61,
-                         names=[problems, status, userTime, failure, preprocessingTime, heuristic, type, equational])
     df[userTime] = df[userTime].convert_objects(convert_numeric=True)
     df[userTime] = df[userTime].astype('float')
     df[userTime].fillna(99999.9, inplace=True)
 
-    global problemsNames,problemsNameSet
+    global problemsNames,problemsNameSet, problemsOnly
     if(problemsNameSet is False) :
         problemsNames[:,0] = df[problems]
+        problemsOnly  = np.array(df[problems])
+        print problemsOnly
         problemsNameSet = True
     return df
-
-
-
-def getProblems(name):
-    array = np.empty(shape=13774, dtype="S10")
-    array[0:] = np.genfromtxt(name, delimiter=",", skip_header=61,usecols=(0), dtype=None)
-    return array
-
-
-def getStatus(name):
-    array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(1), dtype=None)
-    return array
-
-
-def getUserTime(name):
-    array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(2), dtype=None)
-    return array
-
-def getFailure(name):
-    array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(3), dtype=None)
-    return array
-
-def getPreprocessingTime(name):
-    array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(4), dtype=None)
-    return array
-
-def getHeuristic(name):
-    array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(59), dtype=None)
-    return array
-
-def getType(name):
-    array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(60), dtype=None)
-    return array
-
-def getEquational(name):
-    array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(61), dtype=None)
-    return array
-
-
 
 def getNumericalStatus(status, time):
     result = [99999.9]*(len(status))
@@ -107,7 +81,9 @@ def getNumericalStatus(status, time):
 
 def performanceVectors(heuristicsDir):
     allFiles = os.listdir(heuristicsDir)
+    global filesCount
     filesCount = len([i  for i,x in enumerate(allFiles) if x.endswith(".csv")])
+    print filesCount
     problemsCount = 13774 #for testing few problems
     processData = np.empty((problemsCount,filesCount),dtype="S10")
     counter = 1
@@ -130,17 +106,48 @@ def excludeData(data):
     for i in range(j):
         l = (np.where(data[i] != '99999.9')[0]).size
         m = (np.where(data[i] == '99999.9')[0]).size
-        if(l == 40 ):
+        if(l == filesCount ):
             solvedbyAllandNone = solvedbyAllandNone  + [i]
-        if(m == 40):
+        if(m == filesCount):
             solvedbyAllandNone = solvedbyAllandNone + [i]
     #Removing the solved by All and None
     data = np.delete(data,solvedbyAllandNone,0)
     #Removing Problems Names Solved by All and None
-    global problemsNames
+    global problemsNames,problemsOnly
     problemsNames = np.delete(problemsNames,solvedbyAllandNone,0)
+    print problemsOnly.size
+    problemsOnly = np.delete(problemsOnly,solvedbyAllandNone)
     return data
 
+def cluster_data(data,clustersno):
+    k = int(clustersno)
+    kmeans = cluster.KMeans(n_clusters=k)
+    t0 = time()
+    kmeans.fit(data)
+    print "time is:",(time()-t0)
+    labels = kmeans.labels_
+    centroids = kmeans.cluster_centers_
+    #clusters = analyze_data(labels, clustersno)
+    #prepare_supervised(labels, clustersno)
+    #global best_heuristics
+    #best_heuristics = choose_best_heuristics(clusters)
+    return labels,centroids
+
+def plot_clustering_result(labels, centroids,data,k):
+    #print best_heuristics
+    for i in range(k):
+        # select only data observations with cluster label == i
+        ds = data[np.where(labels == i)]
+        # plot the data observations
+        dots = plt.plot(ds[:, 0], ds[:, 1], 'o')
+        # plot the centroids
+        lines = plt.plot(centroids[i, 0], centroids[i, 1], 'kx')
+        # make the centroid x's bigger
+        plt.setp(lines, ms=15.0)
+        plt.setp(lines, mew=2.0)
+        plt.setp(dots, ms=7.0)
+        plt.setp(dots, mew=2.0)
+    plt.show()
 def analyze_data(labels,clusterno):
 
     #Get name and heuristics times for problems in each cluster and accummulate them in labelsNames
@@ -170,16 +177,94 @@ def analyze_data(labels,clusterno):
             labelsNames[x],  # formatting, 2 digits in this case
             delimiter=',',  # column delimiter
             newline='\n',  # new line character
-            footer='End of Cluster'+str(x),  # file footer
+             footer='End of Cluster'+str(x),  # file footer
             comments='#',  # character to use for comments
             header='Data generated by Clustering, in Cluster'+str(x)+" "+str(len(labelsNames[x]))+" Problems",
             fmt="%s")
     print clustersLengths
+    print sum(clustersLengths)
     return labelsNames
 
 
+def choose_best_heuristics(clusters):
+    result =[]
+    for i in range(len(clusters)):
+        cluster = ((clusters[i])[:, 1:])
+        col_totals = [float((sum(map(float, x)))/13774.0) for x in zip(*cluster)]
+        best_index = col_totals.index(min(col_totals))
+        best_heuristic = heuristicNames[best_index+1]
+        result = result + [best_heuristic]
+    return result
+
+def process_features(proc):
+    proclist = []
+    start = False
+    temp = ""
+    for i in range(len(proc[0])):
+        if start is False and proc[0][i] != "(":
+            continue
+        elif start is False and proc[0][i] == "(":
+            start = True
+        elif start is True and proc[0][i] != ")" and proc[0][i] != "," and proc[0][i] != " ":
+            temp = temp + proc[0][i]
+        elif start is True and proc[0][i] == ",":
+            if len(proclist) == 15 or len(proclist) == 16:
+                proclist = proclist + [float(temp)]
+            else:
+                proclist = proclist + [int(temp)]
+            temp = ""
+        elif start is True and proc[0][i] == ")":
+            proclist = proclist + [int(temp)]
+            temp = ""
+            start = False
+    return proclist
+
+def prepare_supervised(labels, clusterno,tptpDirectory,proverDirectory):
+    labelsNames = []
+    cluster_number_for_each_problem = []
+    k = int(clusterno)
+    for j in range(k):
+        temp = [i for i, x in enumerate(labels) if x == j]
+        #problems =[]
+        #problems = problemsOnly[temp]
+        #print problems
+        cluster_number_for_each_problem += [j]*len(problemsOnly[temp])
+        labelsNames.append(problemsOnly[temp])
+
+    #print cluster_numbers,problemsOnly
+    #dictionary = dict(zip(labelsNames, cluster_number_for_each_problem))
+    file = open("svmInput.csv", "w")
+    print "clusters length",len(cluster_number_for_each_problem)
+    labelsNames=np.concatenate(labelsNames).ravel()
+    #print labelsNames
+    countar = 0
+    np.savetxt(
+        file,  # file name
+        ["#X","f1","f2","f3","f4","f5","f6","f7","f8","f9","f10","f11","f12","f13","f14","f15","f16","f17","f18","f19","f20","f21","f22","Y"],
+        delimiter=',',  # new line character
+        newline=',',
+        fmt="%s")
+    for i in range(len(labelsNames)):
+        cmd = 'export TPTP='+tptpDirectory+' ; '+proverDirectory+'/./classify_problem --tstp-format '+tptpDirectory+'/Problems/'+labelsNames[i][0:3]+'/'+labelsNames[i]
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
+        features_list = process_features(proc)
+        features_list = [labelsNames[i]]+features_list+[cluster_number_for_each_problem[i]]
+        countar += 1
+        print countar
+        np.savetxt(
+            file,  # file name
+            [""],  # new line character
+            newline='\n',
+            fmt="%s")
+        np.savetxt(
+            file,  # file name
+            features_list,
+            delimiter=',',  # new line character
+            newline=',',
+            fmt="%s")
 
 def elbow_method(data):
+
     k_range = range(1,450)
     k_means = [cluster.KMeans(n_clusters=k).fit(data) for k in k_range]
     centroids = [X.cluster_centers_ for X in k_means]
@@ -200,48 +285,31 @@ def elbow_method(data):
     plt.title('Variance vs. k')
     plt.show()
 
-def cluster_data(data,clustersno):
+
+def run_program(inputfile,clustersno,tptpDirectory,proverDirectory):
     k = int(clustersno)
-    kmeans = cluster.KMeans(n_clusters=k)
-    t0 = time();
-    kmeans.fit(data)
-    print "time is:",(time()-t0)
-    labels = kmeans.labels_
-    centroids = kmeans.cluster_centers_
+
+    data = performanceVectors(inputfile)
+
+    labels,centroids = cluster_data(data, clustersno)
+
+    prepare_supervised(labels, k, tptpDirectory, proverDirectory)
+
     clusters = analyze_data(labels, clustersno)
+
     global best_heuristics
     best_heuristics = choose_best_heuristics(clusters)
-    print best_heuristics
-    for i in range(k):
-        # select only data observations with cluster label == i
-        ds = data[np.where(labels == i)]
-        # plot the data observations
-        dots = plt.plot(ds[:, 0], ds[:, 1], 'o')
-        # plot the centroids
-        lines = plt.plot(centroids[i, 0], centroids[i, 1], 'kx')
-        # make the centroid x's bigger
-        plt.setp(lines, ms=15.0)
-        plt.setp(lines, mew=2.0)
-        plt.setp(dots, ms=7.0)
-        plt.setp(dots, mew=2.0)
-    plt.show()
-    return labels
 
-def choose_best_heuristics(clusters):
-    result =[]
-    for i in range(len(clusters)):
-        cluster = ((clusters[i])[:, 1:])
-        col_totals = [float((sum(map(float, x)))/13774.0) for x in zip(*cluster)]
-        best_index = col_totals.index(min(col_totals))
-        best_heuristic = heuristicNames[best_index+1]
-        result = result + [best_heuristic]
-    return result
+    plot_clustering_result(labels,centroids,data,k)
+    return 0
 
 def main(argv):
     inputfile=""
+    tptpDirectory=""
+    proverDirectory=""
     clustersno = 0
     try:
-        opts, args = getopt.getopt(argv, "hi:k:", ["ifile="])
+        opts, args = getopt.getopt(argv, "hi:k:t:p:", ["ifile="])
     except getopt.GetoptError:
         print 'extractPerformance.py -i <inputfile>'
         sys.exit(2)
@@ -253,13 +321,13 @@ def main(argv):
             inputfile = arg
         elif opt == '-k':
             clustersno = arg
+        elif opt == '-t':
+            tptpDirectory = arg
+        elif opt == '-p':
+            proverDirectory = arg
             if (os.path.isdir(inputfile)):
-                data = performanceVectors(inputfile)
-                cluster_data(data, clustersno)
                 # elbow_method(data)
-                #labels = cluster_data(data,clustersno)
-                #clusters = analyze_data(labels, clustersno)
-                #best_heuristics = choose_best_heuristics(clusters)
+                run_program(inputfile,clustersno,tptpDirectory,proverDirectory)
             else:
                 print "Please enter a valid Directory"
 
