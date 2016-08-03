@@ -26,6 +26,20 @@ equational = "Equational"
 x = np.empty((6755,22), dtype="f")
 y = np.array([])
 
+aya = np.empty((2,2), dtype="f")
+
+aya[0][1]=0.0
+aya[0][0]=1.0
+aya[1][0]=2.0
+aya[1][1]=3.0
+ahm = aya
+print ahm,aya
+
+tootoo = np.array([1,2,3,4])
+ex = np.where( tootoo == 3 )[0]
+print ex
+tootoo =  np.delete(tootoo,ex, None )
+print tootoo
 def getData(name):
     #array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(0,1,2,3,4,59,60,61), dtype=None)
     #array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(0,1,2,3,4,59,60,61), usemask=True,dtype=None,missing_values="-",filling_values=0)
@@ -71,6 +85,8 @@ def getData2(name):
     return df
 
 df = getData2("svmInput.csv")
+print np.where(df["X"] == "ALG006-1.p")[0]
+
 for i in range(22):
     df["f" + str(i + 1)] = df["f" + str(i + 1)].convert_objects(convert_numeric=True)
     x[:, i] = df["f" + str(i + 1)]

@@ -34,6 +34,7 @@ type = "Type"
 equational = "Equational"
 
 heuristicNames = ["Problem"]
+problems_features = {}
 problemsNames = np.empty((13774,40), dtype="S15")
 problemsOnly = np.array([])
 problemsNameSet = False
@@ -92,6 +93,7 @@ def performanceVectors(heuristicsDir):
 def excludeData(data):
     j,k = data.shape
     solvedbyAllandNone = []
+    print j,k
     for i in range(j):
         l = (np.where(data[i] != '99999.9')[0]).size
         m = (np.where(data[i] == '99999.9')[0]).size
@@ -99,6 +101,9 @@ def excludeData(data):
             solvedbyAllandNone = solvedbyAllandNone  + [i]
         if(m == filesCount):
             solvedbyAllandNone = solvedbyAllandNone + [i]
+        print l,m
+    print len(solvedbyAllandNone)
+    print j - len(solvedbyAllandNone)
     #Removing the solved by All and None
     data = np.delete(data,solvedbyAllandNone,0)
     #Removing Problems Names Solved by All and None
@@ -137,6 +142,7 @@ def plot_clustering_result(labels, centroids,data,k):
         plt.setp(dots, ms=7.0)
         plt.setp(dots, mew=2.0)
     plt.show()
+
 def analyze_data(labels,clusterno):
 
     #Get name and heuristics times for problems in each cluster and accummulate them in labelsNames
@@ -218,10 +224,12 @@ def prepare_supervised(labels, clusterno,tptpDirectory,proverDirectory):
         cluster_number_for_each_problem += [j]*len(problemsOnly[temp])
         labelsNames.append(problemsOnly[temp])
 
+    labelsNames=np.concatenate(labelsNames).ravel()
+
     if not (os.path.isfile("svmInput.csv")):
+        print " HEY YOU!"
         file = open("svmInput.csv", "w")
         print "clusters length",len(cluster_number_for_each_problem)
-        labelsNames=np.concatenate(labelsNames).ravel()
         #print labelsNames
         countar = 0
         np.savetxt(
@@ -235,10 +243,13 @@ def prepare_supervised(labels, clusterno,tptpDirectory,proverDirectory):
             [""],  # new line character
             newline='\n',
             fmt="%s")
+        #global problems_features
         for i in range(len(labelsNames)):
             cmd = 'export TPTP='+tptpDirectory+' ; '+proverDirectory+'/./classify_problem --tstp-format '+tptpDirectory+'/Problems/'+labelsNames[i][0:3]+'/'+labelsNames[i]
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
             features_list = process_features(proc)
+            #problem_features = features_list+[int(cluster_number_for_each_problem[i])]
+            #problems_features[labelsNames[i]] = features_list
             features_list = [labelsNames[i]]+features_list+[int(cluster_number_for_each_problem[i])]
             countar += 1
             print countar
@@ -249,7 +260,43 @@ def prepare_supervised(labels, clusterno,tptpDirectory,proverDirectory):
                 newline='\n',
                 fmt="%s")
     else:
-        df = get_svmData("svmInput.csv")
+        #lazem mel svm input!
+        df = np.array(get_svmData("svmInput.csv"))
+        m, n = df.shape
+        dict = {}
+        print m,n
+        print df[0][0]
+        print df[0][1:]
+        for i in range(m):
+            dict[df[i][0]] = [df[i][1:]]
+
+        svmInput_tobe = np.empty((m, n), dtype="S15")
+
+        for i in range(m):
+            toto = np.array([df[i][0]])
+            toto = np.append(toto,dict[df[i][0]][0])
+            toto[23] = cluster_number_for_each_problem[i]
+            svmInput_tobe[i] = toto
+
+        file = open("svmInput.csv", "w")
+        np.savetxt(
+            file,  # file name
+            ["#X","f1","f2","f3","f4","f5","f6","f7","f8","f9","f10","f11","f12","f13","f14","f15","f16","f17","f18","f19","f20","f21","f22","Y"],
+            delimiter=',',  # new line character
+            newline=',',
+            fmt="%s")
+        np.savetxt(
+            file,  # file name
+            [""],  # new line character
+            newline='\n',
+            fmt="%s")
+        np.savetxt(
+            file,  # file name
+            svmInput_tobe,
+            delimiter=',',  # new line character
+            newline='\n',
+            fmt="%s")
+
 
 
 def elbow_method(data):
@@ -305,10 +352,9 @@ def run_program(inputfile,clustersno,tptpDirectory,proverDirectory):
     data = performanceVectors(inputfile)
 
     labels,centroids = cluster_data(data, clustersno)
-    if not (os.path.isfile("svmInput.csv")):
-        prepare_supervised(labels, k, tptpDirectory, proverDirectory)
-    else:
-        print "NOOOOO"
+    print labels
+    prepare_supervised(labels, k, tptpDirectory, proverDirectory)
+
 
     clusters = analyze_data(labels, clustersno)
 
