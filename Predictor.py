@@ -7,6 +7,7 @@ from scipy.spatial.distance import cdist, pdist
 import pandas as pd
 import subprocess
 from sklearn import svm
+import random
 
 class Predictor(object):
     problemsCol = 0
@@ -32,22 +33,25 @@ class Predictor(object):
         self.clustersno = int(clustersno)
         self.tptpDir = tptpDir
         self.proverDir = proverDir
+
         self.data = np.array([])
         self.processingData = np.array([])
-        self.problemsNameSet = False
         self.problemsNames = np.array([])
-        self.heuristicNames = ["Problem"]
+        self.labels = []
+        self.centroids = []
+        self.clusters = []
+        self.best_heuristics = []
         self.problems_features = {}
+
+        self.clustersLengths = []
+        self.problemsNameSet = False
+        self.heuristicNames = ["Problem"]
         self.filesCount = 0
         self.problemsCount = int(problemsCount)
         self.time = 0
-        self.labels = []
-        self.centroids = []
-        self.clustersLengths = []
-        self.clusters = []
-        self.best_heuristics = []
+
         self.estimator = svm.LinearSVC()
-        self.test = ""
+        self.test = []
 
 
     def getData(self,name):
@@ -115,7 +119,7 @@ class Predictor(object):
         #Removing Problems Names Solved by All and None
         #global problemsNames,problemsOnly
         #problemsNames = np.delete(problemsNames,solvedbyAllandNone,0)
-        self.problemsnames = np.delete(self.problemsNames,solvedbyAllandNone)
+        self.problemsNames= np.delete(self.problemsNames,solvedbyAllandNone)
         file = open("processingData.csv", "w")
         np.savetxt(
             file,  # file name
@@ -295,14 +299,17 @@ class Predictor(object):
 
         df = np.array(Predictor.get_svmData("svmInput.csv"))
         s,r = df.shape
+        print s
         for i in range(s):
             self.problems_features[df[i][0]] = [df[i][1:23]]
-        if self.test != "":
-            index =  np.where(df[0] == self.test)[0]
-            print len(index)
-            print index
-            print "khlas keda"
-            df = np.delete(df, index, 0)
+        print df[:, 0]
+        if len(self.test) > 0 :
+            for i in range(len(self.test)):
+                strTest = str(self.test[i])
+                index =  np.where(df[:, 0] == strTest)[0]
+                print index, strTest
+                df = np.delete(df, index, 0)
+
         m, n = df.shape
         print m
         dict = {}
@@ -317,7 +324,10 @@ class Predictor(object):
             temp[23] = cluster_number_for_each_problem[i]
             svmInput_tobe[i] = temp
 
-        file = open("svmInput.csv", "w")
+        if len(self.test) > 0 :
+            file = open("svmInputtest.csv", "w")
+        else:
+            file = open("svmInput.csv", "w")
         np.savetxt(
             file,  # file name
             ["#X", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14", "f15",
@@ -379,26 +389,39 @@ class Predictor(object):
         svm_input = Predictor.get_svmData("svmInput.csv")
         self.build_estimator(svm_input)
 
-    def test_predictor(self, problem):
+    def test_predictor(self, problems):
         self.performanceVectors()
         self.excludeData()
+        test = []
+        for i in range(problems):
+            temp = random.randint(0,6755)
+            test += [temp]
+            #index = np.where( self.problemsNames == problem )[0]
+        #print index,self.problemsNames[np.where( self.problemsNames == problem )]
+        print test
+        print self.processingData[test]
 
-        index = np.where( self.problemsNames == problem )[0]
-        print index,self.problemsNames[np.where( self.problemsNames == problem )]
-        self.processingData = np.delete(self.processingData, index, 0)
-        self.test = problem
+        self.processingData = np.delete(self.processingData, test, 0)
+        for i in range(problems):
+            test[i] = self.problemsNames[test[i]]
+        self.test = test
+        print self.test
+        print len(self.problemsNames)
         self.cluster_data()
         self.prepare_supervised()
         self.analyze_data()
         self.choose_best_heuristics()
-        svm_input = Predictor.get_svmData("svmInput.csv")
+        svm_input = Predictor.get_svmData("svmInputtest.csv")
         self.build_estimator(svm_input)
         print "hey"
         #print self.problems_features
 
-        test = self.problems_features[problem]
-        print test
-        return self.make_prediction(test)
+        result = {}
+        for i in range(problems):
+            testi = self.problems_features[test[i]]
+            result[test[i]] = self.make_prediction(testi)
+
+        return result
 
 
     def make_prediction(self, input_features):
@@ -409,5 +432,5 @@ class Predictor(object):
 
 x = Predictor("/home/ayatallah/bachelor/bachelor/heuristics", 350, " /home/ayatallah/bachelor/TPTP-v6.3.0",
              "/home/ayatallah/bachelor/E/PROVER", 13774)
-print x.test_predictor("ALG006-1.p")
+print x.test_predictor(15)
 #print x.make_prediction([1, 2, 3, 3, 41, 1, 2, 1, 2, 3, 3, 0, 0, 0, 20, 1, 0, 2, 1, 5, 5, 3])

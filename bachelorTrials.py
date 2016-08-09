@@ -36,10 +36,219 @@ ahm = aya
 print ahm,aya
 
 tootoo = np.array([1,2,3,4])
-ex = np.where( tootoo == 3 )[0]
-print ex
+ex = np.where( tootoo == [1,2,3] )[0]
+print tootoo[0]
 tootoo =  np.delete(tootoo,ex, None )
 print tootoo
+
+
+from sklearn.preprocessing import OneHotEncoder
+enc = OneHotEncoder()
+enc.fit([[0, 0, 3], [1, 1, 0], [0, 2, 1], [1, 0, 2]])
+OneHotEncoder(categorical_features='all', dtype=float, handle_unknown='error', n_values='auto', sparse=True)
+print enc.n_values_
+print enc.feature_indices_
+print enc.transform([[0, 1, 1]]).toarray()
+
+
+
+
+cmd = 'export TPTP=/home/ayatallah/bachelor/TPTP-v6.3.0 ; /home/ayatallah/bachelor/E/PROVER/./classify_problem --tstp-format /home/ayatallah/bachelor/TPTP-v6.3.0/Problems/GRA/GRA034^1.p'
+###args = shlex.split()
+proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
+print(proc[0])
+proclist = []
+start= False
+temp = ""
+i = 0
+for i in range(len(proc[0])):
+    if start is False and proc[0][i] != "(":
+        continue
+    elif start is False and proc[0][i] =="(":
+        start = True
+    elif start is True and proc[0][i] != ")" and proc[0][i] != "," and proc[0][i]!=" ":
+        temp = temp+ proc[0][i]
+    elif start is True and  proc[0][i] == ",":
+        if len(proclist)==15 or len(proclist)==16:
+            proclist = proclist + [float(temp)]
+        else:
+            proclist = proclist + [int(temp)]
+        temp = ""
+    elif start is True and proc[0][i] == ")":
+        proclist = proclist + [int(temp)]
+        temp = ""
+        start = False
+for j in range(1,14,1):
+    if j == 10 or j == 11 :
+        proclist = proclist +[ int(proc[0][i-(14-j)])]
+    else:
+        proclist = proclist + [proc[0][i - (14 - j)]]
+def process_categorical(features_set):
+    result = features_set[0:23]
+
+    if features_set[23] == 'U':
+        result += [1]
+    elif features_set[23] == 'H':
+        result += [2]
+    elif features_set[23] == 'G':
+        result += [3]
+    else:
+        result += [0]
+
+
+
+    if features_set[24] == 'U':
+        result += [1]
+    elif features_set[24] == 'H':
+        result += [2]
+    elif features_set[24] == 'G':
+        result += [3]
+    else:
+        result += [0]
+
+    if features_set[25] == 'N':
+        result += [1]
+    elif features_set[25] == 'S':
+        result += [2]
+    elif features_set[25] == 'P':
+        result += [3]
+    else:
+        result += [0]
+
+    if features_set[26] == 'F':
+        result += [1]
+    elif features_set[26] == 'S':
+        result += [2]
+    elif features_set[26] == 'M':
+        result += [3]
+    else:
+        result += [0]
+
+    if features_set[24] == 'G':
+        result += [1]
+    elif features_set[24] == 'N':
+        result += [2]
+    else:
+        result += [0]
+
+    if features_set[24] == 'U':
+        result += [1]
+    elif features_set[24] == 'H':
+        result += [2]
+    elif features_set[24] == 'G':
+        result += [3]
+    else:
+        result += [0]
+    if features_set[24] == 'U':
+        result += [1]
+    elif features_set[24] == 'H':
+        result += [2]
+    elif features_set[24] == 'G':
+        result += [3]
+    else:
+        result += [0]
+    if features_set[24] == 'U':
+        result += [1]
+    elif features_set[24] == 'H':
+        result += [2]
+    elif features_set[24] == 'G':
+        result += [3]
+    else:
+        result += [0]
+    if features_set[24] == 'U':
+        result += [1]
+    elif features_set[24] == 'H':
+        result += [2]
+    elif features_set[24] == 'G':
+        result += [3]
+    else:
+        result += [0]
+    if features_set[24] == 'U':
+        result += [1]
+    elif features_set[24] == 'H':
+        result += [2]
+    elif features_set[24] == 'G':
+        result += [3]
+    else:
+        result += [0]
+    if features_set[24] == 'U':
+        result += [1]
+    elif features_set[24] == 'H':
+        result += [2]
+    elif features_set[24] == 'G':
+        result += [3]
+    else:
+        result += [0]
+    if features_set[24] == 'U':
+        result += [1]
+    elif features_set[24] == 'H':
+        result += [2]
+    elif features_set[24] == 'G':
+        result += [3]
+    else:
+        result += [0]
+    if features_set[24] == 'U':
+        result += [1]
+    elif features_set[24] == 'H':
+        result += [2]
+    elif features_set[24] == 'G':
+        result += [3]
+    else:
+        result += [0]
+    if features_set[24] == 'U':
+        result += [1]
+    elif features_set[24] == 'H':
+        result += [2]
+    elif features_set[24] == 'G':
+        result += [3]
+    else:
+        result += [0]
+    if features_set[24] == 'U':
+        result += [1]
+    elif features_set[24] == 'H':
+        result += [2]
+    elif features_set[24] == 'G':
+        result += [3]
+    else:
+        result += [0]
+    if features_set[24] == 'U':
+        result += [1]
+    elif features_set[24] == 'H':
+        result += [2]
+    elif features_set[24] == 'G':
+        result += [3]
+    else:
+        result += [0]
+    if features_set[24] == 'U':
+        result += [1]
+    elif features_set[24] == 'H':
+        result += [2]
+    elif features_set[24] == 'G':
+        result += [3]
+    else:
+        result += [0]
+    if features_set[24] == 'U':
+        result += [1]
+    elif features_set[24] == 'H':
+        result += [2]
+    elif features_set[24] == 'G':
+        result += [3]
+    else:
+        result += [0]
+    if features_set[24] == 'U':
+        result += [1]
+    elif features_set[24] == 'H':
+        result += [2]
+    elif features_set[24] == 'G':
+        result += [3]
+    else:
+        result += [0]
+
+print proclist
+print len(proclist)
+
+
+
 def getData(name):
     #array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(0,1,2,3,4,59,60,61), dtype=None)
     #array = np.genfromtxt(name, delimiter=",", skip_header=62, skip_footer=13764, usecols=(0,1,2,3,4,59,60,61), usemask=True,dtype=None,missing_values="-",filling_values=0)
@@ -84,22 +293,22 @@ def getData2(name):
     #print df
     return df
 
-df = getData2("svmInput.csv")
-print np.where(df["X"] == "ALG006-1.p")[0]
+#df = getData2("svmInput.csv")
+#print np.where(df["X"] == "ALG006-1.p")[0]
 
-for i in range(22):
-    df["f" + str(i + 1)] = df["f" + str(i + 1)].convert_objects(convert_numeric=True)
-    x[:, i] = df["f" + str(i + 1)]
-df["Y"] = df["Y"].convert_objects(convert_numeric=True)
-y = np.array(df["Y"])
+#for i in range(22):
+#    df["f" + str(i + 1)] = df["f" + str(i + 1)].convert_objects(convert_numeric=True)
+#    x[:, i] = df["f" + str(i + 1)]
+#df["Y"] = df["Y"].convert_objects(convert_numeric=True)
+#y = np.array(df["Y"])
 
-lin_clf = svm.LinearSVC()
-lin_clf.fit(x, y)
+#lin_clf = svm.LinearSVC()
+#lin_clf.fit(x, y)
 #print lin_clf.classes_
 #print lin_clf.get_params(deep=True)
 print "hi"
 
-print lin_clf.predict(np.array([[1,2,3,3,41,1,2,1,2,3,3,0,0,0,20,1,0,2,1,5,5,3]]).reshape(1,-1))
+#print lin_clf.predict(np.array([[1,2,3,3,41,1,2,1,2,3,3,0,0,0,20,1,0,2,1,5,5,3]]).reshape(1,-1))
 print "hi"
 #print np.array([66,170,236,307,1639,66,157,66,158,234,222,157,67,157,157,0,1,2,1,6,3,1]).reshape(1,-1)
 #print x
@@ -199,29 +408,3 @@ np.savetxt(
 
 
 ###proc2 = subprocess.call('export TPTP=/home/ayatallah/bachelor/TPTP-v6.3.0', shell=True)
-#cmd = 'export TPTP=/home/ayatallah/bachelor/TPTP-v6.3.0 ; /home/ayatallah/bachelor/E/PROVER/./classify_problem --tstp-format /home/ayatallah/bachelor/TPTP-v6.3.0/Problems/AGT/AGT001+1.p'
-###args = shlex.split()
-#proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
-#print(proc[0])
-#proclist = []
-#start= False
-#temp = ""
-#for i in range(len(proc[0])):
-#    if start is False and proc[0][i] != "(":
-#        continue
-#    elif start is False and proc[0][i] =="(":
-#        start = True
-#    elif start is True and proc[0][i] != ")" and proc[0][i] != "," and proc[0][i]!=" ":
-#        temp = temp+ proc[0][i]
-#    elif start is True and  proc[0][i] == ",":
-#        if len(proclist)==15 or len(proclist)==16:
-#            proclist = proclist + [float(temp)]
-#        else:
-#            proclist = proclist + [int(temp)]
-#        temp = ""
-#    elif start is True and proc[0][i] == ")":
-#        proclist = proclist + [int(temp)]
-#        temp = ""
-#        start = False
-#print proclist
-#print len(proclist)
