@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import subprocess
+from sklearn.preprocessing import OneHotEncoder
 from sklearn import svm
 import shlex
 n1 = 'a'
@@ -42,13 +43,8 @@ tootoo =  np.delete(tootoo,ex, None )
 print tootoo
 
 
-from sklearn.preprocessing import OneHotEncoder
-enc = OneHotEncoder()
-enc.fit([[0, 0, 3], [1, 1, 0], [0, 2, 1], [1, 0, 2]])
-OneHotEncoder(categorical_features='all', dtype=float, handle_unknown='error', n_values='auto', sparse=True)
-print enc.n_values_
-print enc.feature_indices_
-print enc.transform([[0, 1, 1]]).toarray()
+
+
 
 
 
@@ -83,166 +79,7 @@ for j in range(1,14,1):
         proclist = proclist +[ int(proc[0][i-(14-j)])]
     else:
         proclist = proclist + [proc[0][i - (14 - j)]]
-def process_categorical(features_set):
-    result = features_set[0:23]
 
-    if features_set[23] == 'U':
-        result += [1]
-    elif features_set[23] == 'H':
-        result += [2]
-    elif features_set[23] == 'G':
-        result += [3]
-    else:
-        result += [0]
-
-
-
-    if features_set[24] == 'U':
-        result += [1]
-    elif features_set[24] == 'H':
-        result += [2]
-    elif features_set[24] == 'G':
-        result += [3]
-    else:
-        result += [0]
-
-    if features_set[25] == 'N':
-        result += [1]
-    elif features_set[25] == 'S':
-        result += [2]
-    elif features_set[25] == 'P':
-        result += [3]
-    else:
-        result += [0]
-
-    if features_set[26] == 'F':
-        result += [1]
-    elif features_set[26] == 'S':
-        result += [2]
-    elif features_set[26] == 'M':
-        result += [3]
-    else:
-        result += [0]
-
-    if features_set[24] == 'G':
-        result += [1]
-    elif features_set[24] == 'N':
-        result += [2]
-    else:
-        result += [0]
-
-    if features_set[24] == 'U':
-        result += [1]
-    elif features_set[24] == 'H':
-        result += [2]
-    elif features_set[24] == 'G':
-        result += [3]
-    else:
-        result += [0]
-    if features_set[24] == 'U':
-        result += [1]
-    elif features_set[24] == 'H':
-        result += [2]
-    elif features_set[24] == 'G':
-        result += [3]
-    else:
-        result += [0]
-    if features_set[24] == 'U':
-        result += [1]
-    elif features_set[24] == 'H':
-        result += [2]
-    elif features_set[24] == 'G':
-        result += [3]
-    else:
-        result += [0]
-    if features_set[24] == 'U':
-        result += [1]
-    elif features_set[24] == 'H':
-        result += [2]
-    elif features_set[24] == 'G':
-        result += [3]
-    else:
-        result += [0]
-    if features_set[24] == 'U':
-        result += [1]
-    elif features_set[24] == 'H':
-        result += [2]
-    elif features_set[24] == 'G':
-        result += [3]
-    else:
-        result += [0]
-    if features_set[24] == 'U':
-        result += [1]
-    elif features_set[24] == 'H':
-        result += [2]
-    elif features_set[24] == 'G':
-        result += [3]
-    else:
-        result += [0]
-    if features_set[24] == 'U':
-        result += [1]
-    elif features_set[24] == 'H':
-        result += [2]
-    elif features_set[24] == 'G':
-        result += [3]
-    else:
-        result += [0]
-    if features_set[24] == 'U':
-        result += [1]
-    elif features_set[24] == 'H':
-        result += [2]
-    elif features_set[24] == 'G':
-        result += [3]
-    else:
-        result += [0]
-    if features_set[24] == 'U':
-        result += [1]
-    elif features_set[24] == 'H':
-        result += [2]
-    elif features_set[24] == 'G':
-        result += [3]
-    else:
-        result += [0]
-    if features_set[24] == 'U':
-        result += [1]
-    elif features_set[24] == 'H':
-        result += [2]
-    elif features_set[24] == 'G':
-        result += [3]
-    else:
-        result += [0]
-    if features_set[24] == 'U':
-        result += [1]
-    elif features_set[24] == 'H':
-        result += [2]
-    elif features_set[24] == 'G':
-        result += [3]
-    else:
-        result += [0]
-    if features_set[24] == 'U':
-        result += [1]
-    elif features_set[24] == 'H':
-        result += [2]
-    elif features_set[24] == 'G':
-        result += [3]
-    else:
-        result += [0]
-    if features_set[24] == 'U':
-        result += [1]
-    elif features_set[24] == 'H':
-        result += [2]
-    elif features_set[24] == 'G':
-        result += [3]
-    else:
-        result += [0]
-    if features_set[24] == 'U':
-        result += [1]
-    elif features_set[24] == 'H':
-        result += [2]
-    elif features_set[24] == 'G':
-        result += [3]
-    else:
-        result += [0]
 
 print proclist
 print len(proclist)
@@ -288,10 +125,120 @@ def getData2(name):
         if li.startswith("#"):
             comment += 1
     #print comment
-    df= pd.read_csv(name,header=None,delimiter=",",skiprows=comment,names=["X","f1","f2","f3","f4","f5","f6","f7","f8","f9","f10","f11","f12","f13","f14","f15","f16","f17","f18","f19","f20","f21","f22","Y"])
+    df= pd.read_csv(name,header=None,delimiter=",",skiprows=comment)
 
     #print df
     return df
+
+
+def process_categorical():
+    df = np.array(getData2("svmInput.csv"))
+
+    tempU = np.where(df[:,23]=='U')
+    tempH = np.where(df[:,23]== 'H')
+    tempG = np.where(df[:,23]== 'G')
+    df[tempU,23] = 0
+    df[tempH,23] = 1
+    df[tempG,23] = 2
+
+    tempU = np.where(df[:, 24] == 'U')
+    tempH = np.where(df[:, 24] == 'H')
+    tempG = np.where(df[:, 24] == 'G')
+    df[tempU, 24] = 0
+    df[tempH, 24] = 1
+    df[tempG, 24] = 2
+
+    tempN = np.where(df[:,25]=='N')
+    tempS = np.where(df[:,25]== 'S')
+    tempP = np.where(df[:,25]== 'P')
+    df[tempU,25] = 0
+    df[tempH,25] = 1
+    df[tempG,25] = 2
+
+    tempF = np.where(df[:,26]=='F')
+    tempS = np.where(df[:,26]== 'S')
+    tempM = np.where(df[:,26]== 'M')
+    df[tempU,26] = 0
+    df[tempH,26] = 1
+    df[tempG,26] = 2
+
+    tempN = np.where(df[:,27]=='N')
+    tempG = np.where(df[:,27]== 'G')
+    df[tempN,27] = 0
+    df[tempG,27] = 1
+
+    tempS = np.where(df[:,30]=='S')
+    tempM = np.where(df[:,30]== 'M')
+    tempL = np.where(df[:,30]== 'L')
+    df[tempS,30] = 0
+    df[tempM,30] = 1
+    df[tempL,30] = 2
+
+    tempS = np.where(df[:,31]=='S')
+    tempM = np.where(df[:,31]== 'M')
+    tempD = np.where(df[:,31]== 'D')
+    df[tempS,31] = 0
+    df[tempM,31] = 1
+    df[tempD,31] = 2
+    x = np.array(df[:,31])
+    result = np.empty((5,2))
+    print result.shape
+    print result[:,0]
+    return df
+
+def apply_encoding(df):
+    m,n = df.shape
+    result = np.empty((m, n+8),dtype="S12")
+
+    result[:,0:23] = df[:, 0:23]
+    result[:, 23:25] = df[:, 28:30]
+
+    enc = OneHotEncoder()
+    enc2 = OneHotEncoder()
+    OneHotEncoder(categorical_features='all', dtype=float, handle_unknown='error', n_values='auto', sparse=True)
+
+    enc.fit(df[:,23:28])
+    print df[0,23:28]
+    result[0, 25:36] = enc.transform([df[0, 23:28]]).toarray()
+
+    for i in range(m):
+        result[i, 25:36] = enc.transform([df[i, 23:28]]).toarray()
+
+    #print enc.transform([df[0,23:28]]).toarray()
+    #print enc.transform([df[0, 23:28]]).toarray().size
+
+    enc2.fit(df[:,30:32])
+    #print df[0,30:32]
+    #print enc2.transform([df[0,30:32]]).toarray()
+    #print enc2.transform([df[0, 30:32]]).toarray().size
+    result[0, 36:41] = enc2.transform([df[0, 30:32]]).toarray()
+    #print result[0, :]
+    #print len(enc.transform([df[0,23:28]]))
+    for i in range(m):
+        result[i, 36:41] = enc2.transform([df[i, 30:32]]).toarray()
+    return result
+
+reso = process_categorical()
+reso2 = apply_encoding(reso)
+f = open("enctrialinp.csv", "w")
+
+np.savetxt(
+    f,           # file name
+    reso,             # formatting, 2 digits in this case
+    delimiter=',',          # column delimiter
+    newline='\n',          # file footer
+    comments='# ',
+    fmt="%s")
+
+f2 = open("enctrialout.csv", "w")
+
+np.savetxt(
+    f2,           # file name
+    reso2,             # formatting, 2 digits in this case
+    delimiter=',',          # column delimiter
+    newline='\n',          # file footer
+    comments='# ',
+    fmt="%s")
 
 #df = getData2("svmInput.csv")
 #print np.where(df["X"] == "ALG006-1.p")[0]

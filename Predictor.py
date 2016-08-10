@@ -229,10 +229,13 @@ class Predictor(object):
         plt.title('Variance vs. k')
         plt.show()
 
+    @staticmethod
     def process_features(proc):
         proclist = []
         start = False
         temp = ""
+        i = 0
+        print proc[0]
         for i in range(len(proc[0])):
             if start is False and proc[0][i] != "(":
                 continue
@@ -250,6 +253,16 @@ class Predictor(object):
                 proclist = proclist + [int(temp)]
                 temp = ""
                 start = False
+        print len(proc[0])
+        print proc[0]
+        print i
+        for j in range(1, 14, 1):
+            print
+            if j == 10 or j == 11:
+                print i - (14 - j)
+                proclist = proclist + [ int( proc[0][ i - (14 - j) ] ) ]
+            else:
+                proclist = proclist + [proc[0][i - (14 - j)]]
         return proclist
 
     @staticmethod
@@ -270,7 +283,8 @@ class Predictor(object):
         np.savetxt(
             file,  # file name
             ["#X", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14", "f15",
-             "f16", "f17", "f18", "f19", "f20", "f21", "f22", "Y"],
+             "f16", "f17", "f18", "f19", "f20", "f21", "f22","f23","f24","f25","f26","f27","f28","f29","f30","f31","f32","f33",
+             "f34","f35","Y"],
             delimiter=',',  # new line character
             newline=',',
             fmt="%s")
@@ -281,9 +295,10 @@ class Predictor(object):
             fmt="%s")
         # global problems_features
         for i in range(len(labelsNames)):
-            cmd = 'export TPTP=' + self.tptpDirectory + ' ; ' + self.proverDirectory + '/./classify_problem --tstp-format ' + self.tptpDirectory + '/Problems/' + \
-                  labelsNames[i][0:3] + '/' + labelsNames[i]
+            cmd = 'export TPTP=' + self.tptpDir + ' ; ' + self.proverDir + '/./classify_problem --tstp-format ' + self.tptpDir + '/Problems/' + labelsNames[i][0:3] + '/' + labelsNames[i]
+            #print cmd
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
+            print i
             features_list = Predictor.process_features(proc)
             self.problems_features[labelsNames[i]] = features_list
             features_list = [labelsNames[i]] + features_list + [int(cluster_number_for_each_problem[i])]
@@ -364,6 +379,10 @@ class Predictor(object):
         else:
             self.rewrite_svmInput(cluster_number_for_each_problem)
 
+    def prepare_encoding(self):
+        data = Predictor.get_svmData("svmInput.csv")
+
+
     def build_estimator(self,df):
 
         m,n = self.processingData.shape
@@ -384,10 +403,10 @@ class Predictor(object):
         self.excludeData()
         self.cluster_data()
         self.prepare_supervised()
-        self.analyze_data()
-        self.choose_best_heuristics()
-        svm_input = Predictor.get_svmData("svmInput.csv")
-        self.build_estimator(svm_input)
+        #self.analyze_data()
+        #self.choose_best_heuristics()
+        #svm_input = Predictor.get_svmData("svmInput.csv")
+        #self.build_estimator(svm_input)
 
     def test_predictor(self, problems):
         self.performanceVectors()
@@ -430,7 +449,8 @@ class Predictor(object):
 
 
 
-x = Predictor("/home/ayatallah/bachelor/bachelor/heuristics", 350, " /home/ayatallah/bachelor/TPTP-v6.3.0",
+x = Predictor("/home/ayatallah/bachelor/bachelor/heuristics", 350, "/home/ayatallah/bachelor/TPTP-v6.3.0",
              "/home/ayatallah/bachelor/E/PROVER", 13774)
-print x.test_predictor(15)
+x.build_predictor()
+#print x.test_predictor(15)
 #print x.make_prediction([1, 2, 3, 3, 41, 1, 2, 1, 2, 3, 3, 0, 0, 0, 20, 1, 0, 2, 1, 5, 5, 3])
