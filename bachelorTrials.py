@@ -37,6 +37,8 @@ ahm = aya
 print ahm,aya
 
 tootoo = np.array([1,2,3,4])
+tootoo = np.append(tootoo,5)
+print tootoo
 ex = np.where( tootoo <= 3)[0]
 print len(ex)
 tootoo =  np.delete(tootoo,ex, None )
@@ -130,15 +132,16 @@ def getData2(name):
     return df
 
 
-def process_categorical():
-    df = np.array(getData2("bachtrialinp.csv"))
+def process_categorical(name):
 
-    tempU = np.where(df[:,23]=='U')
-    tempH = np.where(df[:,23]== 'H')
-    tempG = np.where(df[:,23]== 'G')
-    df[tempU,23] = 0
-    df[tempH,23] = 1
-    df[tempG,23] = 2
+    df = np.array(getData2(name))
+
+    tempU = np.where(df[:, 23] == 'U')
+    tempH = np.where(df[:, 23] == 'H')
+    tempG = np.where(df[:, 23] == 'G')
+    df[tempU, 23] = 0
+    df[tempH, 23] = 1
+    df[tempG, 23] = 2
 
     tempU = np.where(df[:, 24] == 'U')
     tempH = np.where(df[:, 24] == 'H')
@@ -147,47 +150,44 @@ def process_categorical():
     df[tempH, 24] = 1
     df[tempG, 24] = 2
 
-    tempN = np.where(df[:,25]=='N')
-    tempS = np.where(df[:,25]== 'S')
-    tempP = np.where(df[:,25]== 'P')
-    df[tempU,25] = 0
-    df[tempH,25] = 1
-    df[tempG,25] = 2
+    tempN = np.where(df[:, 25] == 'N')
+    tempS = np.where(df[:, 25] == 'S')
+    tempP = np.where(df[:, 25] == 'P')
+    df[tempN, 25] = 0
+    df[tempS, 25] = 1
+    df[tempP, 25] = 2
 
-    tempF = np.where(df[:,26]=='F')
-    tempS = np.where(df[:,26]== 'S')
-    tempM = np.where(df[:,26]== 'M')
-    df[tempU,26] = 0
-    df[tempH,26] = 1
-    df[tempG,26] = 2
+    tempF = np.where(df[:, 26] == 'F')
+    tempS = np.where(df[:, 26] == 'S')
+    tempM = np.where(df[:, 26] == 'M')
+    df[tempF, 26] = 0
+    df[tempS, 26] = 1
+    df[tempM, 26] = 2
 
-    tempN = np.where(df[:,27]=='N')
-    tempG = np.where(df[:,27]== 'G')
-    df[tempN,27] = 0
-    df[tempG,27] = 1
+    tempN = np.where(df[:, 27] == 'N')
+    tempG = np.where(df[:, 27] == 'G')
+    df[tempN, 27] = 0
+    df[tempG, 27] = 1
 
-    tempS = np.where(df[:,30]=='S')
-    tempM = np.where(df[:,30]== 'M')
-    tempL = np.where(df[:,30]== 'L')
-    df[tempS,30] = 0
-    df[tempM,30] = 1
-    df[tempL,30] = 2
+    tempS = np.where(df[:, 30] == 'S')
+    tempM = np.where(df[:, 30] == 'M')
+    tempL = np.where(df[:, 30] == 'L')
+    df[tempS, 30] = 0
+    df[tempM, 30] = 1
+    df[tempL, 30] = 2
 
-    tempS = np.where(df[:,31]=='S')
-    tempM = np.where(df[:,31]== 'M')
-    tempD = np.where(df[:,31]== 'D')
-    df[tempS,31] = 0
-    df[tempM,31] = 1
-    df[tempD,31] = 2
-    #x = np.array(df[:,31])
-    #result = np.empty((5,2))
-    #print result.shape
-    #print result[:,0]
+    tempS = np.where(df[:, 31] == 'S')
+    tempM = np.where(df[:, 31] == 'M')
+    tempD = np.where(df[:, 31] == 'D')
+    df[tempS, 31] = 0
+    df[tempM, 31] = 1
+    df[tempD, 31] = 2
     return df
 
 def apply_encoding(df):
+
     m,n = df.shape
-    result = np.empty((m, n+8),dtype="S12")
+    result = np.empty((m, n+11),dtype="S12")
 
     result[:,0:23] = df[:, 0:23]
     result[:, 23:25] = df[:, 28:30]
@@ -200,27 +200,22 @@ def apply_encoding(df):
     print df[0,23:28]
     print enc.transform([df[0, 23:28]]).toarray().size
     print enc.transform([df[0, 23:28]]).toarray()
-    result[0, 25:36] = enc.transform([df[0, 23:28]]).toarray()
+    result[0, 25:38] = enc.transform([df[0, 23:28]]).toarray()
 
     for i in range(m):
-        result[i, 25:36] = enc.transform([df[i, 23:28]]).toarray()
+        result[i, 25:38] = enc.transform([df[i, 23:28]]).toarray()
 
-    #print enc.transform([df[0,23:28]]).toarray()
-    #print enc.transform([df[0, 23:28]]).toarray().size
 
     enc2.fit(df[:,30:32])
-    #print df[0,30:32]
-    #print enc2.transform([df[0,30:32]]).toarray()
-    #print enc2.transform([df[0, 30:32]]).toarray().size
-    result[0, 36:41] = enc2.transform([df[0, 30:32]]).toarray()
-    #print result[0, :]
-    #print len(enc.transform([df[0,23:28]]))
+
     for i in range(m):
-        result[i, 36:41] = enc2.transform([df[i, 30:32]]).toarray()
+        result[i, 38:43] = enc2.transform([df[i, 30:32]]).toarray()
+    result[:,43] = df[:,32]
     return result
 
-reso = process_categorical()
+reso = process_categorical("bachtrialinp.csv")
 reso2 = apply_encoding(reso)
+
 f = open("enctrialinp.csv", "w")
 
 np.savetxt(
@@ -232,7 +227,20 @@ np.savetxt(
     fmt="%s")
 
 f2 = open("enctrialout.csv", "w")
+np.savetxt(
+    f2,  # file name
+    ["#X", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14", "f15",
+     "f16", "f17", "f18", "f19", "f20", "f21", "f22", "f23", "f24", "f25", "f26", "f27", "f28", "f29", "f30", "f31",
+     "f32", "f33", "f34", "f35", "f36", "f37", "f38", "f39", "f40","f41","f42", "Y"],
+    delimiter=',',  # new line character
+    newline=',',
+    fmt="%s")
 
+np.savetxt(
+    f2,  # file name
+    [""],  # new line character
+    newline='\n',
+    fmt="%s")
 np.savetxt(
     f2,           # file name
     reso2,             # formatting, 2 digits in this case
@@ -241,6 +249,10 @@ np.savetxt(
     comments='# ',
     fmt="%s")
 
+
+df = getData2("enctrialout.csv")
+print df
+print "HIIIII"
 #df = getData2("svmInput.csv")
 #print np.where(df["X"] == "ALG006-1.p")[0]
 

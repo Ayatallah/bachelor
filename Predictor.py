@@ -8,6 +8,7 @@ import pandas as pd
 import subprocess
 from sklearn import svm
 from sklearn.cross_validation import KFold
+from sklearn.preprocessing import OneHotEncoder
 
 class Predictor(object):
     problemsCol = 0
@@ -275,7 +276,7 @@ class Predictor(object):
             file,  # file name
             ["#X", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14", "f15",
              "f16", "f17", "f18", "f19", "f20", "f21", "f22","f23","f24","f25","f26","f27","f28","f29","f30","f31","f32","f33",
-             "f34","f35","Y"],
+             "f34","f35"],
             delimiter=',',  # new line character
             newline=',',
             fmt="%s")
@@ -288,9 +289,12 @@ class Predictor(object):
         for i in range(len(labelsNames)):
             cmd = 'export TPTP=' + self.tptpDir + ' ; ' + self.proverDir + '/./classify_problem --tstp-format ' + self.tptpDir + '/Problems/' + labelsNames[i][0:3] + '/' + labelsNames[i]
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
+
             features_list = Predictor.process_features(proc)
+
             self.problems_features[labelsNames[i]] = features_list
-            features_list = [labelsNames[i]] + features_list + [int(cluster_number_for_each_problem[i])]
+            features_list = [labelsNames[i]] + features_list
+
             counter += 1
             np.savetxt(
                 file,  # file name
@@ -303,21 +307,21 @@ class Predictor(object):
 
         df = np.array(Predictor.get_svmData("svmInput_encoded.csv"))
         m,n = df.shape
-
+        print m,n
         for i in range(m):
-            self.problems_features[df[i][0]] = [df[i][1:41]]
+            self.problems_features[df[i][0]] = [df[i][1:]]
 
         dict = {}
         for i in range(m):
             dict[df[i][0]] = [df[i][1:]]
 
         k=  len(labelsNames)
-        svmInput_tobe = np.empty((k, n), dtype="S25")
+        svmInput_tobe = np.empty((k, n+1), dtype="S25")
 
         for i in range(k):
             temp = np.array([labelsNames[i]])
             temp = np.append(temp, dict[labelsNames[i]][0])
-            temp[41] = cluster_number_for_each_problem[i]
+            temp = np.append(temp,[cluster_number_for_each_problem[i]])
             svmInput_tobe[i] = temp
 
         file = open("svmInputTest.csv", "w")
@@ -325,7 +329,7 @@ class Predictor(object):
             file,  # file name
             ["#X", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14", "f15",
              "f16", "f17", "f18", "f19", "f20", "f21", "f22","f23","f24","f25","f26","f27","f28","f29","f30","f31",
-             "f32","f33","f34","f35","f36","f37","f38","f39","f40","Y"],
+             "f32","f33","f34","f35","f36","f37","f38","f39","f40","f41","f42","Y"],
             delimiter=',',  # new line character
             newline=',',
             fmt="%s")
@@ -355,22 +359,130 @@ class Predictor(object):
 
         if not (os.path.isfile("svmInput.csv")):
             self.write_svmInput(labelsNames, cluster_number_for_each_problem)
+            Predictor.prepare_supervised_encoded(cluster_number_for_each_problem)
         else:
             self.rewrite_svmInput(labelsNames,cluster_number_for_each_problem)
 
+    @staticmethod
+    def process_categorical(filename):
+
+        df = np.array(Predictor.get_svmData(filename))
+
+        tempU = np.where(df[:, 23] == 'U')
+        tempH = np.where(df[:, 23] == 'H')
+        tempG = np.where(df[:, 23] == 'G')
+        df[tempU, 23] = 0
+        df[tempH, 23] = 1
+        df[tempG, 23] = 2
+
+        tempU = np.where(df[:, 24] == 'U')
+        tempH = np.where(df[:, 24] == 'H')
+        tempG = np.where(df[:, 24] == 'G')
+        df[tempU, 24] = 0
+        df[tempH, 24] = 1
+        df[tempG, 24] = 2
+
+        tempN = np.where(df[:, 25] == 'N')
+        tempS = np.where(df[:, 25] == 'S')
+        tempP = np.where(df[:, 25] == 'P')
+        df[tempN, 25] = 0
+        df[tempS, 25] = 1
+        df[tempP, 25] = 2
+
+        tempF = np.where(df[:, 26] == 'F')
+        tempS = np.where(df[:, 26] == 'S')
+        tempM = np.where(df[:, 26] == 'M')
+        df[tempF, 26] = 0
+        df[tempS, 26] = 1
+        df[tempM, 26] = 2
+
+        tempN = np.where(df[:, 27] == 'N')
+        tempG = np.where(df[:, 27] == 'G')
+        df[tempN, 27] = 0
+        df[tempG, 27] = 1
+
+        tempS = np.where(df[:, 30] == 'S')
+        tempM = np.where(df[:, 30] == 'M')
+        tempL = np.where(df[:, 30] == 'L')
+        df[tempS, 30] = 0
+        df[tempM, 30] = 1
+        df[tempL, 30] = 2
+
+        tempS = np.where(df[:, 31] == 'S')
+        tempM = np.where(df[:, 31] == 'M')
+        tempD = np.where(df[:, 31] == 'D')
+        df[tempS, 31] = 0
+        df[tempM, 31] = 1
+        df[tempD, 31] = 2
+        return df
+
+    @staticmethod
+    def apply_encoding(df):
+
+        m, n = df.shape
+        result = np.empty((m, n + 10), dtype="S25")
+
+        result[:, 0:23] = df[:, 0:23]
+        result[:, 23:25] = df[:, 28:30]
+
+        enc = OneHotEncoder()
+        enc2 = OneHotEncoder()
+
+        OneHotEncoder(categorical_features='all', dtype=float, handle_unknown='error', n_values='auto', sparse=True)
+
+        enc.fit(df[:, 23:28])
+        for i in range(m):
+            result[i, 25:38] = enc.transform([df[i, 23:28]]).toarray()
+
+        enc2.fit(df[:, 30:32])
+        for i in range(m):
+            result[i, 38:43] = enc2.transform([df[i, 30:32]]).toarray()
+
+        #result[:, 43] = cluster_number_for_each_problem
+        return result
+
+    @staticmethod
+    def prepare_supervised_encoded(cluster_number_for_each_problem):
+        result = Predictor.process_categorical("svmInput.csv")
+        result2 = Predictor.apply_encoding(result)
+
+        file = open("svmInput_encoded.csv", "w")
+
+        np.savetxt(
+            file,  # file name
+            ["#X", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14", "f15",
+             "f16", "f17", "f18", "f19", "f20", "f21", "f22","f23","f24","f25","f26","f27","f28","f29","f30","f31",
+             "f32","f33","f34","f35","f36","f37","f38","f39","f40","f41", "f42"],
+            delimiter=',',  # new line character
+            newline=',',
+            fmt="%s")
+
+        np.savetxt(
+            file,  # file name
+            [""],  # new line character
+            newline='\n',
+            fmt="%s")
+
+        np.savetxt(
+            file,  # file name
+            result2,  # formatting, 2 digits in this case
+            delimiter=',',  # column delimiter
+            newline='\n',  # file footer
+            comments='# ',
+            fmt="%s")
 
     def build_estimator(self,df):
 
         m,n = self.processingData.shape
-        x = np.empty((m, 40), dtype="f")
+        x = np.empty((m, 42), dtype="f")
         y = np.array([])
 
-        for i in range(40):
+        for i in range(42):
             df[(i + 1)] = df[(i + 1)].convert_objects(convert_numeric=True)
             x[:, i] = df[(i + 1)]
 
-        df[41] = df[41].convert_objects(convert_numeric=True)
-        y = np.array(df[41])
+        df[43] = df[43].convert_objects(convert_numeric=True)
+        y = np.array(df[43])
 
         self.estimator.fit(x, y)
 
