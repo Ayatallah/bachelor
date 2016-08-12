@@ -319,7 +319,7 @@ class Predictor(object):
 
     def rewrite_svmInput(self,labelsNames,cluster_number_for_each_problem):
 
-        df = np.array(Predictor.get_svmData("svmInput.csv"))
+        df = np.array(Predictor.get_svmData("svmInput_encoded.csv"))
         s,r = df.shape
         #print "Ashan nt2kd bas!"
         #print s,r
