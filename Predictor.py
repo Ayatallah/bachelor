@@ -9,6 +9,8 @@ import subprocess
 from sklearn import svm
 from sklearn.cross_validation import KFold
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
+
 
 class Predictor(object):
     problemsCol = 0
@@ -51,8 +53,8 @@ class Predictor(object):
         self.filesCount = 0
         self.problemsCount = int(problemsCount)
         self.time = 0
-
-        self.estimator = svm.LinearSVC()
+        self.estimator = DecisionTreeClassifier(min_samples_split=10, random_state=99)
+        #self.estimator = svm.LinearSVC()
         #self.test = []
 
 
