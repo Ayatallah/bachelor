@@ -7,6 +7,8 @@ from scipy.spatial.distance import cdist, pdist
 import pandas as pd
 import subprocess
 from sklearn import svm
+from sklearn.cross_validation import KFold
+
 import random
 
 class Predictor(object):
@@ -35,6 +37,7 @@ class Predictor(object):
         self.proverDir = proverDir
 
         self.data = np.array([])
+        self.testingData = np.array([])
         self.processingData = np.array([])
         self.problemsNames = np.array([])
         self.labels = []
@@ -51,7 +54,7 @@ class Predictor(object):
         self.time = 0
 
         self.estimator = svm.LinearSVC()
-        self.test = []
+        #self.test = []
 
 
     def getData(self,name):
@@ -83,8 +86,8 @@ class Predictor(object):
     def performanceVectors(self):
         allFiles = os.listdir(self.heuristicsDir)
         self.filesCount = len([i  for i,x in enumerate(allFiles) if x.endswith(".csv")])
-        self.processingData = np.empty((self.problemsCount,self.filesCount),dtype="S10")
-        self.data = np.empty((self.problemsCount,self.filesCount+1),dtype="S10")
+        self.processingData = np.empty((self.problemsCount,self.filesCount),dtype="S25")
+        self.data = np.empty((self.problemsCount,self.filesCount+1),dtype="S25")
         counter = 1
         counter2 = 0
         for file in allFiles:
@@ -99,11 +102,11 @@ class Predictor(object):
         #return excludeData(processData)
         #return processData
 
-    def excludeData(self):
+    def excludeData(self,test_index):
         j,k = self.processingData.shape
-        print j,k
+        #print j,k
         solvedbyAllandNone = []
-        print self.filesCount
+        #print self.filesCount
         for i in range(j):
             l = (np.where(self.processingData[i] != '99999.9')[0]).size
             m = (np.where(self.processingData[i] == '99999.9')[0]).size
@@ -111,15 +114,19 @@ class Predictor(object):
                 solvedbyAllandNone = solvedbyAllandNone  + [i]
             if(m == self.filesCount):
                 solvedbyAllandNone = solvedbyAllandNone + [i]
-        print len(solvedbyAllandNone)
-        print j - len(solvedbyAllandNone)
+        #print len(solvedbyAllandNone)
+        #print j - len(solvedbyAllandNone)
         #Removing the solved by All and None
         self.processingData = np.delete(self.processingData,solvedbyAllandNone,0)
+        self.processingData = np.delete(self.processingData, test_index, 0)
         self.data = np.delete(self.data,solvedbyAllandNone,0)
-        #Removing Problems Names Solved by All and None
-        #global problemsNames,problemsOnly
-        #problemsNames = np.delete(problemsNames,solvedbyAllandNone,0)
+        #self.data = np.delete(self.data, test_index, 0)
         self.problemsNames= np.delete(self.problemsNames,solvedbyAllandNone)
+        self.testingData = self.problemsNames[test_index]
+        #print self.testingData
+        self.problemsNames = np.delete(self.problemsNames, test_index, 0)
+
+
         file = open("processingData.csv", "w")
         np.savetxt(
             file,  # file name
@@ -235,7 +242,7 @@ class Predictor(object):
         start = False
         temp = ""
         i = 0
-        print proc[0]
+        #print proc[0]
         for i in range(len(proc[0])):
             if start is False and proc[0][i] != "(":
                 continue
@@ -253,13 +260,13 @@ class Predictor(object):
                 proclist = proclist + [int(temp)]
                 temp = ""
                 start = False
-        print len(proc[0])
-        print proc[0]
-        print i
+        #print len(proc[0])
+        #print proc[0]
+        #print i
         for j in range(1, 14, 1):
-            print
+            #print
             if j == 10 or j == 11:
-                print i - (14 - j)
+                #print i - (14 - j)
                 proclist = proclist + [ int( proc[0][ i - (14 - j) ] ) ]
             else:
                 proclist = proclist + [proc[0][i - (14 - j)]]
@@ -298,7 +305,7 @@ class Predictor(object):
             cmd = 'export TPTP=' + self.tptpDir + ' ; ' + self.proverDir + '/./classify_problem --tstp-format ' + self.tptpDir + '/Problems/' + labelsNames[i][0:3] + '/' + labelsNames[i]
             #print cmd
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
-            print i
+            #print i
             features_list = Predictor.process_features(proc)
             self.problems_features[labelsNames[i]] = features_list
             features_list = [labelsNames[i]] + features_list + [int(cluster_number_for_each_problem[i])]
@@ -310,43 +317,57 @@ class Predictor(object):
                 newline='\n',
                 fmt="%s")
 
-    def rewrite_svmInput(self,cluster_number_for_each_problem):
+    def rewrite_svmInput(self,labelsNames,cluster_number_for_each_problem):
 
         df = np.array(Predictor.get_svmData("svmInput.csv"))
         s,r = df.shape
-        print s
+        #print "Ashan nt2kd bas!"
+        #print s,r
+        #print s
         for i in range(s):
-            self.problems_features[df[i][0]] = [df[i][1:23]]
-        print df[:, 0]
-        if len(self.test) > 0 :
-            for i in range(len(self.test)):
-                strTest = str(self.test[i])
-                index =  np.where(df[:, 0] == strTest)[0]
-                print index, strTest
-                df = np.delete(df, index, 0)
+            self.problems_features[df[i][0]] = [df[i][1:41]]
+        #print df[:, 0]
+        #if len(self.test) > 0 :
+        #    for i in range(len(self.test)):
+        #        strTest = str(self.test[i])
+        #        index =  np.where(df[:, 0] == strTest)[0]
+        #        print index, strTest
+        #        df = np.delete(df, index, 0)
 
         m, n = df.shape
-        print m
+        #print m
         dict = {}
         for i in range(m):
             dict[df[i][0]] = [df[i][1:]]
-
-        svmInput_tobe = np.empty((m, n), dtype="S15")
-
-        for i in range(m):
-            temp = np.array([df[i][0]])
-            temp = np.append(temp, dict[df[i][0]][0])
-            temp[23] = cluster_number_for_each_problem[i]
+        m = len(dict['SYO038-1.003.003.p'][0])
+        test = np.array(dict['SYO038-1.003.003.p'][0])
+        #print test[0:m-1]
+        svmInput_tobe = np.empty((m, n), dtype="S25")
+        #if 'SYO038-1.003.003.p' in df[:][0]:
+        #    print "HELLOOOOYOYOYOYO"
+        #if 'SYO038-1.003.003.p' in labelsNames:
+        #    print "HELLOOOOO"
+        #if 'HWV052-1.002.002.p' in labelsNames:
+        #    print "HELLOOOOOWWWWWWWWWWWW"
+        #print "MEAW"
+        k=  len(labelsNames)
+        svmInput_tobe = np.empty((k, n), dtype="S25")
+        for i in range(k):
+            temp = np.array([labelsNames[i]])
+            temp = np.append(temp, dict[labelsNames[i]][0])
+            temp[41] = cluster_number_for_each_problem[i]
             svmInput_tobe[i] = temp
+        #print svmInput_tobe
+        #if len(self.test) > 0 :
+        #    file = open("svmInputtest.csv", "w")
+        #else:
 
-        if len(self.test) > 0 :
-            file = open("svmInputtest.csv", "w")
-        else:
-            file = open("svmInput.csv", "w")
+        file = open("svmInputTest.csv", "w")
         np.savetxt(
             file,  # file name
             ["#X", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14", "f15",
-             "f16", "f17", "f18", "f19", "f20", "f21", "f22", "Y"],
+             "f16", "f17", "f18", "f19", "f20", "f21", "f22","f23","f24","f25","f26","f27","f28","f29","f30","f31",
+             "f32","f33","f34","f35","f36","f37","f38","f39","f40","Y"],
             delimiter=',',  # new line character
             newline=',',
             fmt="%s")
@@ -377,70 +398,173 @@ class Predictor(object):
         if not (os.path.isfile("svmInput.csv")):
             self.write_svmInput(labelsNames, cluster_number_for_each_problem)
         else:
-            self.rewrite_svmInput(cluster_number_for_each_problem)
+            self.rewrite_svmInput(labelsNames,cluster_number_for_each_problem)
 
-    def prepare_encoding(self):
-        data = Predictor.get_svmData("svmInput.csv")
+    #def prepare_encoding(self):
+    #   data = Predictor.get_svmData("svmInput.csv")
 
 
     def build_estimator(self,df):
 
         m,n = self.processingData.shape
-        x = np.empty((m, 22), dtype="f")
+        x = np.empty((m, 40), dtype="f")
         y = np.array([])
 
-        for i in range(22):
+        for i in range(40):
             df[(i + 1)] = df[(i + 1)].convert_objects(convert_numeric=True)
             x[:, i] = df[(i + 1)]
 
-        df[23] = df[23].convert_objects(convert_numeric=True)
-        y = np.array(df[23])
+        df[41] = df[41].convert_objects(convert_numeric=True)
+        y = np.array(df[41])
 
         self.estimator.fit(x, y)
 
-    def build_predictor(self):
+    def build_predictor(self, train_index,test_index):
         self.performanceVectors()
-        self.excludeData()
-        self.cluster_data()
-        self.prepare_supervised()
-        #self.analyze_data()
-        #self.choose_best_heuristics()
-        #svm_input = Predictor.get_svmData("svmInput.csv")
-        #self.build_estimator(svm_input)
-
-    def test_predictor(self, problems):
-        self.performanceVectors()
-        self.excludeData()
-        test = []
-        for i in range(problems):
-            temp = random.randint(0,6755)
-            test += [temp]
-            #index = np.where( self.problemsNames == problem )[0]
-        #print index,self.problemsNames[np.where( self.problemsNames == problem )]
-        print test
-        print self.processingData[test]
-
-        self.processingData = np.delete(self.processingData, test, 0)
-        for i in range(problems):
-            test[i] = self.problemsNames[test[i]]
-        self.test = test
-        print self.test
-        print len(self.problemsNames)
+        self.excludeData(test_index)
         self.cluster_data()
         self.prepare_supervised()
         self.analyze_data()
         self.choose_best_heuristics()
-        svm_input = Predictor.get_svmData("svmInputtest.csv")
+        svm_input = Predictor.get_svmData("svmInputTest.csv")
         self.build_estimator(svm_input)
-        print "hey"
-        #print self.problems_features
 
-        result = {}
-        for i in range(problems):
-            testi = self.problems_features[test[i]]
-            result[test[i]] = self.make_prediction(testi)
+    def rank_heuristics(self, problem):
+        index = np.where(self.data[:,0]==problem)
+        temp = self.data[index,1:][0]
+        dict = {}
+        result = [problem]
+        #print temp[0]
+        #print temp[0][0]
+        #print temp[0][0]
+        #print problem,index
+        #print temp
+        for i in range(self.filesCount):
+            #print i
+            #print temp
+            dict[temp[0][i]]=self.heuristicNames[i+1]
+        temp = np.sort(temp)
+        #print temp[0:5]
 
+        result = result + [dict[temp[0][0]],dict[temp[0][1]],dict[temp[0][2]],dict[temp[0][3]],dict[temp[0][4]]]
+        #print result
         return result
+        #print temp
+        #print result
+        #print dict
+
+    def test_predictor(self):
+        kf = KFold(6755, n_folds=10, shuffle=True)
+
+        test_count = 1
+        for train_index, test_index in kf:
+            testing_result = []
+            x = Predictor("/home/ayatallah/bachelor/bachelor/heuristics", 350, "/home/ayatallah/bachelor/TPTP-v6.3.0",
+                          "/home/ayatallah/bachelor/E/PROVER", 13774)
+            x.build_predictor(train_index,test_index)
+
+            #x.rank_heuristics('AGT010+2.p')
+
+            testing_set = np.array(x.data[:,0])
+            testing_set = np.delete(testing_set, train_index)
+            testing_list = []
+
+            predictions = []
+            file = open("testing_result"+str(test_count)+".csv", "w")
+            np.savetxt(
+                file,  # file name
+                ["#Problem", "H1", "H2", "H3", "H4", "H5", "Result_H", "Prediction"],
+                delimiter=',',  # new line character
+                newline=',',
+                fmt="%s")
+            np.savetxt(
+                file,  # file name
+                [""],  # new line character
+                newline='\n',
+                fmt="%s")
+
+            for i in range(len(testing_set)):
+                tempfeatures_input = np.array(x.problems_features[testing_set[i]][0])
+                testing_list = testing_list + [tempfeatures_input]
+                #temp = np.array([testing_set[i]])
+                #tempfeatures = np.array(x.problems_features[testing_set[i]][0], dtype="S25")
+                #temp = np.append(temp,[[tempfeatures]])
+            for i in range(len(testing_list)):
+
+                m,n = x.make_prediction(testing_list[i])
+                validation_set = x.rank_heuristics(testing_set[i])
+                tempto = np.array(validation_set)
+                temp = np.where(tempto == str(n))[0]
+                #print n
+                #print temp.size
+                #print temp
+                if temp.size == 0:
+                    predictions += [False]
+                else:
+                    predictions += [True]
+
+                validation_set += [n]
+                validation_set += [predictions[i]]
+                np.savetxt(
+                    file,  # file name
+                    validation_set,  # formatting, 2 digits in this case
+                    delimiter=',',  # column delimiter
+                    newline=',',  # new line character file footer
+                    comments='#',  # character to use for comments
+                    fmt="%s")
+                np.savetxt(
+                    file,  # file name
+                    [""],  # new line character
+                    newline='\n',
+                    fmt="%s")
+            preds = np.array(predictions)
+            good = np.where(preds == True)[0]
+            #print good.size
+            print "Good predictions %:", (100.0*(float(good.size)/len(predictions)))
+            #print "Good predictions %:", (100*(predictions.count(True)/len(predictions)))
+            test_count += 1
+
+            #print testing_list
+            #print testing_set
+            #print x.make_prediction(
+            #    [423, 7926, 8349, 21513, 76304, 1, 4492, 423, 7600, 896, 16, 4471, 1, 4471, 4520, 0.004675, 0.989159, 9,
+            #     1, 1184, 5, 1, 3, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0])
+            #print testing_list[0]
+            #break
+            #print("TRAIN:", train_index, "TEST:", test_index)
+    #def test_predictor(self, problems):
+    #    self.performanceVectors()
+    #    self.excludeData()
+    #    test = []
+    #    for i in range(problems):
+    #        temp = random.randint(0,6755)
+    #        test += [temp]
+            #index = np.where( self.problemsNames == problem )[0]
+        #print index,self.problemsNames[np.where( self.problemsNames == problem )]
+    #    print test
+    #    print self.processingData[test]
+
+    #    self.processingData = np.delete(self.processingData, test, 0)
+    #    for i in range(problems):
+    #        test[i] = self.problemsNames[test[i]]
+    #    self.test = test
+    #    print self.test
+    #    print len(self.problemsNames)
+    #    self.cluster_data()
+    #    self.prepare_supervised()
+    #    self.analyze_data()
+    #    self.choose_best_heuristics()
+    #    svm_input = Predictor.get_svmData("svmInputtest.csv")
+    #    self.build_estimator(svm_input)
+    #    print "hey"
+    #    #print self.problems_features
+
+    #    result = {}
+    #    for i in range(problems):
+    #        testi = self.problems_features[test[i]]
+    #        result[test[i]] = self.make_prediction(testi)
+
+    #    return result
 
 
     def make_prediction(self, input_features):
@@ -451,6 +575,5 @@ class Predictor(object):
 
 x = Predictor("/home/ayatallah/bachelor/bachelor/heuristics", 350, "/home/ayatallah/bachelor/TPTP-v6.3.0",
              "/home/ayatallah/bachelor/E/PROVER", 13774)
-x.build_predictor()
-#print x.test_predictor(15)
-#print x.make_prediction([1, 2, 3, 3, 41, 1, 2, 1, 2, 3, 3, 0, 0, 0, 20, 1, 0, 2, 1, 5, 5, 3])
+
+x.test_predictor()
