@@ -1,13 +1,19 @@
 import numpy as np
+
+import pandas as pd
+
+import matplotlib.pyplot as plt
+
+from scipy.spatial.distance import cdist, pdist
+
+
+import subprocess
 import os
 from time import time
-from sklearn import cluster
-import matplotlib.pyplot as plt
-from scipy.spatial.distance import cdist, pdist
-import pandas as pd
-import subprocess
+
 from sklearn import svm
 from sklearn.cross_validation import KFold
+from sklearn import cluster
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
 
@@ -309,7 +315,6 @@ class Predictor(object):
 
         df = np.array(Predictor.get_svmData("svmInput_encoded.csv"))
         m,n = df.shape
-        print m,n
         for i in range(m):
             self.problems_features[df[i][0]] = [df[i][1:]]
 
@@ -329,9 +334,9 @@ class Predictor(object):
         file = open("svmInputTest.csv", "w")
         np.savetxt(
             file,  # file name
-            ["#X", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14", "f15",
-             "f16", "f17", "f18", "f19", "f20", "f21", "f22","f23","f24","f25","f26","f27","f28","f29","f30","f31",
-             "f32","f33","f34","f35","f36","f37","f38","f39","f40","f41","f42","Y"],
+            ["#X", "Nf1", "Nf2", "fN3", "Nf4", "Nf5", "Nf6", "Nf7", "Nf8", "Nf9", "Nf10", "Nf11", "Nf12", "Nf13", "Nf14", "Nf15",
+             "Nf16", "Nf17", "Nf18", "Nf19", "Nf20", "Nf21", "Nf22","Nf29","Nf30","A-U","A-H","A-G","G-U","G-H","N-E","S-E",
+             "P-E","F-NG-F","S-NG-F","M-NG-F","N","G","S","M","L","S","fM","Y"],
             delimiter=',',  # new line character
             newline=',',
             fmt="%s")
@@ -494,6 +499,7 @@ class Predictor(object):
         self.cluster_data()
         self.prepare_supervised()
         self.analyze_data()
+        #print self.time
         self.choose_best_heuristics()
         svm_input = Predictor.get_svmData("svmInputTest.csv")
         self.build_estimator(svm_input)
@@ -512,7 +518,7 @@ class Predictor(object):
 
     def test_predictor(self):
         kf = KFold(6755, n_folds=10, shuffle=True)
-
+        good_sum = 0.0
         test_count = 1
         for train_index, test_index in kf:
 
@@ -569,8 +575,10 @@ class Predictor(object):
 
             preds = np.array(predictions)
             good = np.where(preds == True)[0]
+            good_sum += (100.0*(float(good.size)/len(predictions)))
             print "Good predictions %:", (100.0*(float(good.size)/len(predictions)))
             test_count += 1
+        print "Average Good predictions %:" , good_sum/10.0
 
 
 
@@ -585,3 +593,7 @@ x = Predictor("/home/ayatallah/bachelor/bachelor/heuristics", 350, "/home/ayatal
              "/home/ayatallah/bachelor/E/PROVER", 13774)
 
 x.test_predictor()
+#x.build_predictor([],[])
+
+#good prediction based on solved or not instead of solve ina  good time or not
+#knn, random forest
