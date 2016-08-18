@@ -49,6 +49,9 @@ ex = np.where( tico<= 3)[0]
 print len(ex)
 print ex
 
+for i in range(1,40):
+    print i
+
 
 cmd = 'export TPTP=/home/ayatallah/bachelor/TPTP-v6.3.0 ; /home/ayatallah/bachelor/E/PROVER/./classify_problem --tstp-format /home/ayatallah/bachelor/TPTP-v6.3.0/Problems/GRA/GRA034^1.p'
 ###args = shlex.split()

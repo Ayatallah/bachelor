@@ -504,7 +504,7 @@ class Predictor(object):
         svm_input = Predictor.get_svmData("svmInputTest.csv")
         self.build_estimator(svm_input)
 
-    def rank_heuristics(self, problem):
+    def rank_heuristics(self, problem, heuristic_rank):
         index = np.where(self.data[:,0]==problem)
         temp = self.data[index,1:][0]
         dict = {}
@@ -512,11 +512,19 @@ class Predictor(object):
         for i in range(self.filesCount):
             dict[temp[0][i]]=self.heuristicNames[i+1]
         temp = np.sort(temp)
-
-        result = result + [dict[temp[0][0]],dict[temp[0][1]],dict[temp[0][2]],dict[temp[0][3]],dict[temp[0][4]]]
+        tempx = np.where(temp=='99999.9')[1]
+        temp = np.delete(temp, tempx,None)
+        m = temp.size
+        #print m
+        if (m>= heuristic_rank):
+            for x in range(heuristic_rank):
+                result = result + [dict[temp[x]]]
+        else:
+            for x in range(m):
+                result = result + [dict[temp[x]]]
         return result
 
-    def test_predictor(self):
+    def test_predictor(self,heuristic_rank):
         kf = KFold(6755, n_folds=10, shuffle=True)
         good_sum = 0.0
         test_count = 1
@@ -550,7 +558,7 @@ class Predictor(object):
             for i in range(len(testing_list)):
 
                 m,n = x.make_prediction(testing_list[i])
-                validation_set = x.rank_heuristics(testing_set[i])
+                validation_set = x.rank_heuristics(testing_set[i],heuristic_rank)
                 tempto = np.array(validation_set)
                 temp = np.where(tempto == str(n))[0]
                 if temp.size == 0:
@@ -578,7 +586,9 @@ class Predictor(object):
             good_sum += (100.0*(float(good.size)/len(predictions)))
             print "Good predictions %:", (100.0*(float(good.size)/len(predictions)))
             test_count += 1
-        print "Average Good predictions %:" , good_sum/10.0
+        avg = good_sum/10.0
+        print "Average Good predictions %:" , avg
+        return avg
 
 
 
@@ -588,11 +598,23 @@ class Predictor(object):
         return result, self.best_heuristics[result]
 
 
+    def plot_prediction_results(self):
+        x = []
+        y = []
+        for i in range(1,39):
+            x = x+[i]
+            y = y+[self.test_predictor(i)]
+
+        plt.plot(x, y, 'ro')
+        plt.axis([0, 40, 0, 100])
+        plt.show()
+
 
 x = Predictor("/home/ayatallah/bachelor/bachelor/heuristics", 350, "/home/ayatallah/bachelor/TPTP-v6.3.0",
              "/home/ayatallah/bachelor/E/PROVER", 13774)
 
-x.test_predictor()
+x.plot_prediction_results()
+#x.test_predictor(39)
 #x.build_predictor([],[])
 
 #good prediction based on solved or not instead of solve ina  good time or not
